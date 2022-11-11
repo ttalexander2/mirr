@@ -1,0 +1,54 @@
+#pragma once
+
+#include <iostream>
+#include "type.h"
+#include "type_data.h"
+#include "type_hash.h"
+#include "type_factory.h"
+
+
+namespace reflection
+{
+
+    class registry
+    {
+    public:
+        using id_hash = basic_hash<uint32_t>;
+
+        template<typename T>
+        static type_factory<T> register_type(const std::string &name)
+        {
+            return type_factory<T>(name);
+        }
+
+        template<template<typename> typename T>
+        static auto register_type(const std::string &name)
+        {
+            return template_type_factory<T>(name);
+        }
+
+        static type resolve(const std::string &name) noexcept;
+
+        static type resolve(uint32_t id) noexcept;
+
+        template<typename T>
+        static type resolve() noexcept
+        {
+            uint32_t hash = type_hash<std::decay_t<T>>::value();
+            auto val = type_data::instance().types.find(hash);
+            if (val == type_data::instance().types.end())
+            {
+                auto factory = type_factory<T>(typeid(T).name());
+                return factory._type;
+            }
+            return type(val->first);
+        }
+
+        static bool valid(const std::string &name);
+        static bool valid(uint32_t id);
+
+    private:
+        static uint32_t id_from_name(const std::string &name);
+    };
+
+} // reflection
