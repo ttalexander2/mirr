@@ -58,6 +58,7 @@ int main()
     test_type instance("bill", 42);
 
     auto d = type.data("value");
+    std::cout << d.type().id() << "\n";
     std::cout << instance.value << "\n";
     d.set(instance, 32);
     std::cout << instance.value << "\n";

@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "../include/data.h"
 
 #include "../include/type_data.h"
@@ -59,18 +61,18 @@ namespace reflection
         return false;
     }
 
-    any data::get(const reflection::handle& handle) const
+    any data::get(reflection::handle handle) const
     {
         if (!valid())
             return any{};
-        return type_data::instance().types[_type_id].data[_id].get(handle);
+        return type_data::instance().types[_type_id].data[_id].get(std::move(handle));
     }
 
-    void data::set(const reflection::handle& handle, any value) const
+    void data::set(reflection::handle handle, const any& value) const
     {
         if (!valid())
             return;
-        type_data::instance().types[_type_id].data[_id].set(handle, value);
+        type_data::instance().types[_type_id].data[_id].set(std::move(handle), value);
     }
 
 

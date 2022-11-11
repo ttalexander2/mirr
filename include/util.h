@@ -137,6 +137,21 @@ namespace reflection::internal
     template<typename Type, typename Candidate>
     using function_helper_t = typename function_helper<Type, Candidate>::type;
 
+    template <std::size_t, typename>
+    struct type_list_element;
+
+    template <std::size_t Index, typename First, typename... Other>
+    struct type_list_element<Index, type_list<First, Other...>>
+            : type_list_element<Index - 1u, type_list<Other...>> {};
+
+    template <typename First, typename... Other>
+    struct type_list_element<0u, type_list<First, Other...>>
+    {
+        using type = First;
+    };
+
+    template<std::size_t Index, typename List>
+    using type_list_element_t = typename type_list_element<Index, List>::type;
 
     template<typename Type, auto Data>
     [[nodiscard]] bool set_function(reflection::handle handle, any value)
@@ -144,41 +159,54 @@ namespace reflection::internal
         if (handle.type().id() != type_hash_v<Type>)
             return false;
 
-
-
         if constexpr(!std::is_same_v<decltype(Data), Type> && !std::is_same_v<decltype(Data), std::nullptr_t>)
         {
             if constexpr(std::is_member_function_pointer_v<decltype(Data)>
             || std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>>)
             {
                 using descriptor = function_helper_t<Type, decltype(Data)>;
+                using data_type = type_list_element_t<descriptor::is_static, typename descriptor::args_type>;
+
+                if (auto* const clazz = handle.try_cast<Type>(); clazz)
+                {
+                    if (auto* val = value.try_cast<data_type>(); val)
+                    {
+                        invoke(Data, *clazz, *val);
+                        return true;
+                    }
+                }
             }
             else if constexpr (std::is_member_object_pointer_v<decltype(Data)>)
             {
                 using data_type = std::remove_reference_t<typename function_helper_t<Type, decltype(Data)>::return_type>;
-                if (auto *const clazz = handle.try_cast<Type>(); clazz)
+                if constexpr(!std::is_array_v<data_type> && !std::is_const_v<data_type>)
                 {
-                    invoke(Data, *clazz) = value.cast<data_type>();
-                    return true;
+                    if (auto *const clazz = handle.try_cast<Type>(); clazz)
+                    {
+                        if (auto *val = value.try_cast<data_type>(); val)
+                        {
+                            invoke(Data, *clazz) = *val;
+                            return true;
+                        }
+                    }
                 }
+
             }
             else
             {
                 using data_type = std::remove_reference_t<decltype(*Data)>;
+
                 if constexpr (!std::is_array_v<data_type> && !std::is_const_v<data_type>)
                 {
-
+                    if (auto* val = value.try_cast<data_type>(); val)
+                    {
+                        *Data = *val;
+                        return true;
+                    }
                 }
             }
         }
         return true;
-    }
-
-
-    template <typename Type, auto Data, typename ValueType>
-    [[nodiscard]] bool set_function(reflection::handle handle, ValueType&& value)
-    {
-        return set_function<Type, Data>(handle, any(value));
     }
 
     template<typename Type, auto Data>

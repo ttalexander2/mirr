@@ -63,7 +63,7 @@ namespace reflection
         {}
 
         template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, any>>>
-        any(Type &&value)
+        any(Type &&value) // NOLINT(google-explicit-constructor)
                 :any{}
         {
             initialize<std::decay_t<Type>>(std::forward<Type>(value));
@@ -358,7 +358,7 @@ namespace reflection
     {
     public:
         template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, any>>>
-        handle(Type& value)
+        handle(Type& value) // NOLINT(google-explicit-constructor)
         {
             initialize<Type&>(std::forward<Type&>(value));
         }
