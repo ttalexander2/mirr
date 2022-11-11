@@ -208,12 +208,15 @@ namespace reflection::internal
                 }
             }
         }
-        return true;
+        return false;
     }
 
     template<typename Type, auto Data>
     [[nodiscard]] any get_function(reflection::handle handle)
     {
+        if (handle.type().id() != type_hash_v<Type>)
+            return false;
+
         if constexpr (std::is_member_pointer_v<decltype(Data)>
                 || std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>>)
         {

@@ -47,7 +47,7 @@ namespace reflection
         [[nodiscard]] bool is_static() const;
 
         [[nodiscard]] any get(reflection::handle handle) const;
-        void set(reflection::handle handle, const any& value) const;
+        bool set(reflection::handle handle, const any& value) const;
 
     private:
         explicit data(uint32_t id, uint32_t type_id);

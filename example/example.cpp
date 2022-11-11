@@ -16,6 +16,9 @@ struct test_type
 
     operator int()
     { return value; }
+
+    int get_value() const { return value; }
+    void set_value(int val) { value = val;}
 };
 
 int main()
@@ -28,7 +31,7 @@ int main()
     reflection::registry::register_type<test_type>("test_type")
             .conversion<int>()
             .ctor<const std::string &, int>()
-            .data<&test_type::value>("value");
+            .data<&test_type::get_value, &test_type::set_value>("value");
 
 
     auto type = reflection::registry::resolve("test_type");
@@ -60,8 +63,8 @@ int main()
     auto d = type.data("value");
     std::cout << d.type().id() << "\n";
     std::cout << instance.value << "\n";
-    d.set(instance, 32);
-    std::cout << instance.value << "\n";
+    bool set_result = d.set(instance, 32);
+    std::cout << set_result << "\n";
     auto val = d.get(instance);
     std::cout << val.cast<int>() << "\n";
 

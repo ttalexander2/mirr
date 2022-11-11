@@ -68,11 +68,11 @@ namespace reflection
         return type_data::instance().types[_type_id].data[_id].get(std::move(handle));
     }
 
-    void data::set(reflection::handle handle, const any& value) const
+    bool data::set(reflection::handle handle, const any& value) const
     {
         if (!valid())
-            return;
-        type_data::instance().types[_type_id].data[_id].set(std::move(handle), value);
+            return false;
+        return type_data::instance().types[_type_id].data[_id].set(std::move(handle), value);
     }
 
 

@@ -137,6 +137,42 @@ namespace reflection
         type_factory &data(const std::string &name, bool serialize = true)
         {
             uint32_t hash = basic_hash<uint32_t>::hash(name);
+            type_info *info = _type.info();
+            if (info != nullptr)
+            {
+                data_info data;
+                data.id = hash;
+                data.name = name;
+                data.flags = data_flags::none;
+
+                if (serialize)
+                {
+                    data.flags |= data_flags::is_serialized;
+                }
+
+                if constexpr (std::is_same_v<decltype(Setter), std::nullptr_t>)
+                {
+                    using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Getter), Type &>>;
+
+                    type_factory<data_type>::register_type();
+                    data.type_id = type_hash_v<data_type>;
+                    data.get = &internal::get_function<Type, Getter>;
+                    data.set = &internal::set_function<Type, Setter>;
+                    data.flags |= data_flags::is_const;
+                }
+                else
+                {
+                    using data_type = std::remove_reference_t<std::remove_pointer_t<decltype(Getter)>>;
+
+                    type_factory<data_type>::register_type();
+                    data.type_id = type_hash_v<data_type>;
+                    data.flags |= data_flags::is_static;
+                    data.get = &internal::get_function<Type, Getter>;
+                    data.set = &internal::set_function<Type, Setter>;
+                }
+
+                info->data[hash] = data;
+            }
 
             return *this;
         }
