@@ -62,6 +62,8 @@ int main()
     std::cout << instance.value << "\n";
     d.set(instance, 32);
     std::cout << instance.value << "\n";
+    auto val = d.get(instance);
+    std::cout << val.cast<int>() << "\n";
 
     //reflection::registry::register_type<std::unique_ptr<test_type>>("std::unique_ptr<test_type>");
 

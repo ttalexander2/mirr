@@ -33,17 +33,19 @@ namespace reflection::internal
                     return (*std::forward<T1>(t1)).*f;
             }
         }
+
+        template<class F, class... Args>
+        constexpr std::invoke_result_t<F, Args...> invoke(F&& f, Args&&... args)
+        noexcept(std::is_nothrow_invocable_v<F, Args...>)
+        {
+            if constexpr (std::is_member_pointer_v<std::decay_t<F>>)
+                return detail::invoke_memptr(f, std::forward<Args>(args)...);
+            else
+                return std::forward<F>(f)(std::forward<Args>(args)...);
+        }
     }
 
-    template<class F, class... Args>
-    constexpr std::invoke_result_t<F, Args...> invoke(F&& f, Args&&... args)
-    noexcept(std::is_nothrow_invocable_v<F, Args...>)
-    {
-        if constexpr (std::is_member_pointer_v<std::decay_t<F>>)
-            return detail::invoke_memptr(f, std::forward<Args>(args)...);
-        else
-            return std::forward<F>(f)(std::forward<Args>(args)...);
-    }
+
 
     template<typename... Type>
     struct type_list
@@ -171,7 +173,7 @@ namespace reflection::internal
                 {
                     if (auto* val = value.try_cast<data_type>(); val)
                     {
-                        invoke(Data, *clazz, *val);
+                        detail::invoke(Data, *clazz, *val);
                         return true;
                     }
                 }
@@ -185,7 +187,7 @@ namespace reflection::internal
                     {
                         if (auto *val = value.try_cast<data_type>(); val)
                         {
-                            invoke(Data, *clazz) = *val;
+                            detail::invoke(Data, *clazz) = *val;
                             return true;
                         }
                     }
@@ -212,6 +214,42 @@ namespace reflection::internal
     template<typename Type, auto Data>
     [[nodiscard]] any get_function(reflection::handle handle)
     {
+        if constexpr (std::is_member_pointer_v<decltype(Data)>
+                || std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>>)
+        {
+            if constexpr(!std::is_array_v<std::remove_cv_t<std::remove_reference_t<std::invoke_result_t<decltype(Data), Type &>>>>)
+            {
+                if constexpr (std::is_invocable_v<decltype(Data), Type&>)
+                {
+                    if (auto* clazz = handle.try_cast<Type>(); clazz)
+                    {
+                        return any(detail::invoke(Data, *clazz));
+                    }
+                }
+                if constexpr (std::is_invocable_v<decltype(Data), const Type&>)
+                {
+                    if (auto* clazz = handle.try_cast<const Type>(); clazz)
+                    {
+                        return any(detail::invoke(Data, *clazz));
+                    }
+                }
+            }
+            else if constexpr (std::is_pointer_v<decltype(Data)>)
+            {
+                if constexpr (std::is_array_v<std::remove_pointer_t<decltype(Data)>>)
+                {
+                    return any{};
+                }
+                else
+                {
+                    return any(detail::invoke(*Data));
+                }
+            }
+            else
+            {
+                return any(detail::invoke(Data));
+            }
+        }
         return any{};
     }
 }
