@@ -14,7 +14,7 @@ namespace reflection::internal
         constexpr bool is_reference_wrapper_v<std::reference_wrapper<U>> = true;
 
         template<class C, class Pointed, class T1, class... Args>
-        constexpr decltype(auto) invoke_memptr(Pointed C::* f, T1&& t1, Args&&... args)
+        constexpr decltype(auto) invoke_member_pointer(Pointed C::* f, T1&& t1, Args&&... args)
         {
             if constexpr (std::is_function_v<Pointed>) {
                 if constexpr (std::is_base_of_v<C, std::decay_t<T1>>)
@@ -39,7 +39,7 @@ namespace reflection::internal
         noexcept(std::is_nothrow_invocable_v<F, Args...>)
         {
             if constexpr (std::is_member_pointer_v<std::decay_t<F>>)
-                return detail::invoke_memptr(f, std::forward<Args>(args)...);
+                return detail::invoke_member_pointer(f, std::forward<Args>(args)...);
             else
                 return std::forward<F>(f)(std::forward<Args>(args)...);
         }
@@ -82,7 +82,7 @@ namespace reflection::internal
     template<typename Type, typename Ret, typename Class>
     struct function_descriptor<Type, Ret Class::*>
     {
-        using return_type = Ret &;
+        using return_type = Ret&;
         using args_type = std::conditional_t<std::is_base_of_v<Class, Type>, type_list<>, type_list<Class &>>;
 
         static constexpr auto is_const = false;
@@ -154,6 +154,7 @@ namespace reflection::internal
 
     template<std::size_t Index, typename List>
     using type_list_element_t = typename type_list_element<Index, List>::type;
+
 
     template<typename Type, auto Data>
     [[nodiscard]] bool set_function(reflection::handle handle, any value)
@@ -255,5 +256,151 @@ namespace reflection::internal
         }
         return any{};
     }
+
+    template <typename... Args>
+    [[nodiscard]] uint32_t unwrap_func_args(type_list<Args...>, const std::size_t index) noexcept
+    {
+        uint32_t args[sizeof...(Args) + 1u]{type_hash_v<std::remove_cv_t<std::remove_reference_t<Args>>>...};
+        return args[index + 1u];
+    }
+
+    template <typename Types>
+    [[nodiscard]] static uint32_t func_arg(const size_t index) noexcept
+    {
+        return unwrap_func_args(Types{}, index);
+    }
+
+    template <typename Func, typename... Args>
+    [[nodiscard]] any invoke_with_args(Func &&func, Args &&...args)
+    {
+        if constexpr(std::is_same_v<decltype(detail::invoke(std::forward<Func>(func), args...)), void>)
+        {
+
+            detail::invoke(std::forward<Func>(func), args...);
+            return any{std::in_place_type<void>};
+        }
+        else
+        {
+            return any(detail::invoke(std::forward<Func>(func), args...));
+        }
+    }
+
+    template <typename Type, typename Func, std::size_t... Index>
+    [[nodiscard]] any func_invoke([[maybe_unused]] reflection::handle handle, Func&& func,
+                                  [[maybe_unused]] any* args, std::index_sequence<Index...>)
+    {
+        using descriptor = function_helper_t<Type, std::remove_reference_t<Func>>;
+
+        if constexpr (std::is_invocable_v<std::remove_reference_t<Func>, const Type&,
+                type_list_element_t<Index, typename descriptor::args_type>...>)
+        {
+            if (const auto* clazz = handle.try_cast<const Type>(); clazz &&
+                ((args + Index)->can_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
+            {
+                return invoke_with_args(std::forward<Func>(func), *clazz,
+                               (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+            }
+        }
+        else if constexpr (std::is_invocable_v<std::remove_reference_t<Func>, Type&,
+                type_list_element_t<Index, typename descriptor::args_type>...>)
+        {
+            if (auto* clazz = handle.try_cast<Type>(); clazz &&
+                ((args + Index)->can_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
+            {
+                return invoke_with_args(std::forward<Func>(func), *clazz,
+                               (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+            }
+        }
+        else
+        {
+            if (((args + Index)->can_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
+            {
+                return invoke_with_args(std::forward<Func>(func),
+                        (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+            }
+        }
+
+        return any{};
+    }
+
+    template<typename Type, typename Func>
+    [[nodiscard]] any func_invoke([[maybe_unused]] reflection::handle handle, Func &&candidate, [[maybe_unused]] any *const args) {
+        return internal::func_invoke<Type>(std::move(handle), std::forward<Func>(candidate), args,
+                                           std::make_index_sequence<function_helper_t<Type, std::remove_reference_t<Func>>::args_type::size>{});
+    }
+
+    template<typename Type, auto Func>
+    [[nodiscard]] any func_invoke(reflection::handle instance, any *const args) {
+        return internal::func_invoke<Type>(std::move(instance), Func, args,
+                                           std::make_index_sequence<function_helper_t<Type, std::remove_reference_t<decltype(Func)>>::args_type::size>{});
+    }
+
+
+    template <typename From, typename To, auto Func>
+    any convert_type(any from)
+    {
+        using From_ = std::remove_cv_t<std::remove_reference_t<From>>;
+        using To_ = std::remove_cv_t<std::remove_reference_t<To>>;
+
+
+        if constexpr (!std::is_same_v<decltype(Func), From_> && !std::is_same_v<decltype(Func), std::nullptr_t>)
+        {
+            if constexpr (std::is_member_function_pointer_v<decltype(Func)>)
+            {
+                using return_type = std::invoke_result_t<decltype(Func), From>;
+
+                static_assert(std::is_same_v<return_type, To_>,
+                              "Conversion function does not return the correct type!");
+
+                From* clazz =  from.try_cast<From>();
+                if (clazz == nullptr)
+                    return nullptr;
+                To result = detail::invoke(Func, *clazz);
+                return result;
+            }
+            else if constexpr(std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Func)>>>)
+            {
+                using descriptor = internal::function_helper_t<From, decltype(Func)>;
+
+                static_assert(std::is_same_v<typename descriptor::return_type , To_>, "Conversion function does not return the correct type!");
+                static_assert(std::is_constructible_v<std::function<To_(From_)>, decltype(Func)>, "Conversion function does not take the correct type!"); // This is very stupid, but it works, and I'm lazy.
+
+                From* clazz =  from.try_cast<From>();
+                if (clazz == nullptr)
+                    return nullptr;
+
+                To result = detail::invoke(Func, *clazz);
+                return result;
+            }
+        }
+    }
+
+    template <typename From, typename To>
+    any convert_type(any from)
+    {
+        using From_ = std::remove_cv_t<std::remove_reference_t<From>>;
+        using To_ = std::remove_cv_t<std::remove_reference_t<To>>;
+
+
+        From* val =  from.try_cast<From>();
+        if (val == nullptr)
+        {
+            return nullptr;
+        }
+
+        if constexpr (std::is_constructible_v<To_, From>)
+        {
+            return reflection::any(To_(*val));
+        }
+        else if constexpr (std::is_convertible_v<From_, To_>)
+        {
+            return static_cast<To_>(*val);
+        }
+        else if constexpr (internal::is_convertible_v<From_, To_>)
+        {
+            return val->operator To();
+        }
+    }
+
 }
 

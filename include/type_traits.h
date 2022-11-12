@@ -167,7 +167,22 @@ namespace reflection::internal
         typedef typename remove_all_pointers<T>::type type;
     };
 
+    template <typename From, typename To>
+    struct is_convertible
+    {
+    private:
+        template <typename U>
+        static auto check (U * t)
+        -> decltype( t->operator To(), std::true_type{} );
 
+        template <typename>
+        static std::false_type check (...);
+    public:
+        static constexpr bool value = std::is_convertible_v<From, To> || decltype(check<From>(nullptr))::value;
+    };
+
+    template <typename T, typename U>
+    inline constexpr auto is_convertible_v = is_convertible<T, U>::value;
 
 
 }

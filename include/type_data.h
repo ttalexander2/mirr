@@ -22,9 +22,10 @@ namespace reflection
 
     struct data_info
     {
+        using id_type = uint32_t;
         std::string name;
-        uint32_t id;
-        uint32_t type_id;
+        id_type id;
+        id_type type_id;
 
         bool (*set)(handle, any);
         any (*get)(handle);
@@ -34,12 +35,17 @@ namespace reflection
 
     struct func_info
     {
+        using id_type = uint32_t;
+        using size_type = std::size_t;
         std::string name;
-        uint32_t id;
+        id_type id;
 
-        size_t arity;
-        std::vector<uint32_t> args;
-        uint32_t return_type;
+        size_type arity;
+        id_type return_type;
+
+        id_type (*arg)(const size_type) noexcept;
+        any (*invoke)(handle, any *const);
+
 
         bool is_const;
         bool is_static;
@@ -54,6 +60,12 @@ namespace reflection
         std::vector<uint32_t> args;
     };
 
+    struct conv_info
+    {
+        uint32_t id;
+        any (*helper_func)(any);
+    };
+
     // Holds type_data information for a type.
     struct type_info
     {
@@ -66,8 +78,8 @@ namespace reflection
 
         std::unordered_map<uint32_t, data_info> data;
         std::unordered_map<uint32_t, func_info> functions;
+        std::unordered_map<uint32_t, conv_info> conversions;
         std::vector<ctor_info> constructors;
-        std::vector<uint32_t> conversions;
         std::vector<uint32_t> bases;
     };
 
@@ -77,6 +89,7 @@ namespace reflection
         friend class data;
         friend class function;
         friend class registry;
+        friend class any;
 
         template<typename T>
         friend

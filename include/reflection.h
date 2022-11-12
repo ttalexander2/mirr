@@ -5,6 +5,7 @@
 #include "type_flags.h"
 #include "type.h"
 #include "data.h"
+#include "function.h"
 #include "registry.h"
 
 namespace reflection

@@ -10,11 +10,13 @@ namespace reflection
 
     // Forward declarations
     class type_data;
+    class func_data;
     class registry;
     class any;
     class handle;
     struct type_info;
     class data;
+    class function;
 
     template<typename T>
     class type_factory;
@@ -22,9 +24,12 @@ namespace reflection
     class type
     {
         friend class type_data;
+        friend class func_data;
         friend class registry;
         friend class any;
         friend class handle;
+        friend class data;
+        friend class function;
 
 
         template<typename T>
@@ -75,6 +80,18 @@ namespace reflection
 
         [[nodiscard]] reflection::data data(const std::string& name) const;
         [[nodiscard]] reflection::data data(uint32_t id) const;
+
+        [[nodiscard]] reflection::function function(const std::string& name) const;
+        [[nodiscard]] reflection::function function(uint32_t id) const;
+
+
+        [[nodiscard]] bool is_convertible(uint32_t type_id) const;
+
+        template <typename To>
+        [[nodiscard]] bool is_convertible() const
+        {
+            return is_convertible(type_hash_v<To>);
+        }
 
         // Provides the type flags, containing the data for the boolean properties of this type.
         [[nodiscard]] type_flags flags() const;

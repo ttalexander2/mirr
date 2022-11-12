@@ -11,6 +11,7 @@ namespace reflection
     class type_data;
     class registry;
     class any;
+    class handle;
     struct data_info;
     struct type_info;
 
@@ -23,6 +24,7 @@ namespace reflection
         friend class type_data;
         friend class registry;
         friend class any;
+        friend class handle;
         friend class type;
 
         template<typename T>
@@ -32,10 +34,9 @@ namespace reflection
         data();
         data(const data&) = default;
 
-        inline bool operator==(const data&rhs) const { return _id == rhs._id && _type_id == rhs._type_id; }
+        bool operator==(const data&rhs) const;
 
         [[nodiscard]] bool valid() const;
-
         explicit operator bool() const { return valid(); }
 
         [[nodiscard]] uint32_t id() const;
@@ -47,7 +48,7 @@ namespace reflection
         [[nodiscard]] bool is_static() const;
 
         [[nodiscard]] any get(reflection::handle handle) const;
-        bool set(reflection::handle handle, const any& value) const;
+        [[nodiscard]] bool set(reflection::handle handle, const any& value) const;
 
     private:
         explicit data(uint32_t id, uint32_t type_id);

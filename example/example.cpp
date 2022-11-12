@@ -19,19 +19,36 @@ struct test_type
 
     int get_value() const { return value; }
     void set_value(int val) { value = val;}
+
+    void foo(const std::string& a, const std::string& b)
+    {
+        std::cout << "test_type::foo called\n";
+        std::cout << a << "\n";
+        std::cout << b << "\n";
+    }
 };
+
+std::string c_str_to_string(const char* str)
+{
+    return std::string{str};
+}
+
 
 int main()
 {
     reflection::registry::register_type<void>("void");
     reflection::registry::register_type<std::unique_ptr<void>>("unique_ptr");
-    reflection::registry::register_type<std::string>("string");
+    reflection::registry::register_type<std::string>("string")
+            .conversion<const char*, &std::string::c_str>();
+    reflection::registry::register_type<const char*>("cstring")
+            .conversion<std::string, &c_str_to_string>();
     reflection::registry::register_type<int>("int");
 
     reflection::registry::register_type<test_type>("test_type")
             .conversion<int>()
             .ctor<const std::string &, int>()
-            .data<&test_type::get_value, &test_type::set_value>("value");
+            .data<&test_type::get_value, &test_type::set_value>("value")
+            .function<&test_type::foo>("foo");
 
 
     auto type = reflection::registry::resolve("test_type");
@@ -67,6 +84,19 @@ int main()
     std::cout << set_result << "\n";
     auto val = d.get(instance);
     std::cout << val.cast<int>() << "\n";
+
+
+    std::cout << "string type id: " << reflection::registry::resolve<std::string>().id() << "\n";
+    auto f = type.function("foo");
+    //f.invoke(instance, "ayyy", "beeee");
+
+    reflection::any string = "instance";
+    std::cout << "try_cast: " << *string.try_cast<std::string>() << "\n";
+
+
+
+
+
 
     //reflection::registry::register_type<std::unique_ptr<test_type>>("std::unique_ptr<test_type>");
 

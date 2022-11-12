@@ -211,21 +211,36 @@ namespace reflection
         template <typename Type>
         Type* try_cast() noexcept
         {
-            auto id = type_hash<Type>::value();
-            return static_cast<Type*>(const_cast<void*>(this->data(id)));
+            auto id = type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
+            if (id == type_info._id)
+            {
+                return static_cast<Type *>(this->data(id));
+            }
+            else if (type_info.is_convertible<Type>())
+            {
+                any result = try_conversion(id);
+                return result.try_cast<Type>();
+            }
+            return nullptr;
         }
 
-        template <typename Type>
-        Type cast() noexcept
+        template <typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
+        Ret cast() noexcept
         {
-            Type* ptr = try_cast<Type>();
+            Ret* ptr = this->try_cast<Ret>();
             return *ptr;
         }
 
+        template <typename Type>
+        bool can_cast() noexcept
+        {
 
+            auto id = type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
+            std::cout << "can_cast: " << (try_cast<std::remove_cv_t<std::remove_reference_t<Type>>>() != nullptr) << "\n";
+            return try_cast<std::remove_cv_t<std::remove_reference_t<Type>>>() != nullptr;
+        }
 
     private:
-
 
 
         template<typename Type, typename... Args>
@@ -255,15 +270,16 @@ namespace reflection
                     if constexpr (sizeof...(Args) != 0u && std::is_aggregate_v<Type>)
                     {
                         instance = new Type{std::forward<Args>(args)...};
-                    } else if constexpr (!std::is_abstract<Type>())
+                    }
+                    else if constexpr (!std::is_abstract<Type>())
                     {
                         instance = new Type(std::forward<Args>(args)...);
                     }
                 }
-
-
             }
         }
+
+
 
         template<typename Type>
         static const void *basic_vtable(const internal::any_operation op, const any &value, const void *other)
@@ -342,6 +358,8 @@ namespace reflection
 
             return nullptr;
         }
+
+        any try_conversion(uint32_t type_id);
 
     private:
         union

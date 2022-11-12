@@ -2,6 +2,7 @@
 
 #include "../include/registry.h"
 #include "../include/data.h"
+#include "../include/function.h"
 
 namespace reflection
 {
@@ -135,5 +136,22 @@ namespace reflection
     reflection::data type::data(uint32_t id) const
     {
         return reflection::data(id, _id);
+    }
+
+    reflection::function type::function(const std::string &name) const
+    {
+        return reflection::function(basic_hash<uint32_t>(name), _id);
+    }
+
+    reflection::function type::function(uint32_t id) const
+    {
+        return reflection::function(id, _id);
+    }
+
+    bool type::is_convertible(uint32_t type_id) const
+    {
+        if (!valid())
+            return false;
+        return type_data::instance().types[_id].conversions.find(type_id) != type_data::instance().types[_id].conversions.end();
     }
 }

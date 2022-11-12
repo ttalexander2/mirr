@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <functional>
 #include "basic_hash.h"
 #include "type_data.h"
 #include "type.h"
@@ -43,20 +44,54 @@ namespace reflection
         template<typename To>
         type_factory<Type> &conversion() noexcept
         {
-            static_assert(std::is_convertible_v<Type, To>, "Type is not convertable.");
+            using From_ = std::remove_cv_t<std::remove_reference_t<Type>>;
+            using To_ = std::remove_cv_t<std::remove_reference_t<To>>;
 
-            type_info *info = get_type_info<To>();
+            static_assert(internal::is_convertible_v<From_, To_>,
+                    "Type is not convertable.");
 
-            if (info == nullptr)
+            type_info* to_info = get_type_info<std::decay_t<To>>();
+            if (to_info == nullptr)
             {
-                // Register type
-                type_factory<To>::register_type();
-                info = get_type_info<To>();
+                type_factory<std::decay_t<To>>::register_type();
+                to_info = get_type_info<std::decay_t<To>>();
             }
 
-            if (info != nullptr)
+            if (to_info != nullptr)
             {
-                info->conversions.push_back(info->id);
+                conv_info info{};
+                info.id = to_info->id;
+                info.helper_func = &internal::convert_type<Type, To>;
+
+                if (_type.valid() && _type.info())
+                {
+                    _type.info()->conversions[info.id] = info;
+                }
+            }
+
+            return *this;
+        }
+
+        template <typename To, auto Func>
+        type_factory<Type> &conversion() noexcept
+        {
+            type_info* to_info = get_type_info<std::decay_t<To>>();
+            if (to_info == nullptr)
+            {
+                type_factory<std::decay_t<To>>::register_type();
+                to_info = get_type_info<std::decay_t<To>>();
+            }
+
+            if (to_info != nullptr)
+            {
+                conv_info info{};
+                info.id = to_info->id;
+                info.helper_func = &internal::convert_type<Type, To, Func>;
+
+                if (_type.valid() && _type.info())
+                {
+                    _type.info()->conversions[info.id] = info;
+                }
             }
 
             return *this;
@@ -140,7 +175,7 @@ namespace reflection
             type_info *info = _type.info();
             if (info != nullptr)
             {
-                data_info data;
+                data_info data{};
                 data.id = hash;
                 data.name = name;
                 data.flags = data_flags::none;
@@ -180,7 +215,22 @@ namespace reflection
         template<auto Func>
         type_factory &function(const std::string &name)
         {
+            using descriptor = internal::function_helper_t<Type, decltype(Func)>;
+
             uint32_t hash = basic_hash<uint32_t>::hash(name);
+            type_info *info = _type.info();
+            if (info != nullptr)
+            {
+                func_info func{};
+                func.id = hash;
+                func.name = name;
+                func.arity = descriptor::args_type::size;
+                func.return_type = type_hash_v<typename descriptor::return_type>;
+                func.arg = &internal::func_arg<typename descriptor::args_type>;
+                func.invoke = &internal::func_invoke<Type, Func>;
+
+                info->functions[hash] = func;
+            }
 
             return *this;
         }
@@ -199,7 +249,6 @@ namespace reflection
         static void register_type(const std::string &name)
         {
             auto id = type_hash<Type>::value();
-            // std::cout << "registered: " << name << " [" << id << "]\n";
             auto hash = basic_hash<uint32_t>::hash(name);
 
             if (type_data::instance().types.find(id) == type_data::instance().types.end())

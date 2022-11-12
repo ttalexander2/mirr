@@ -1,7 +1,6 @@
-#include <utility>
-
 #include "../include/data.h"
 
+#include <utility>
 #include "../include/type_data.h"
 #include "../include/registry.h"
 
@@ -20,7 +19,8 @@ namespace reflection
     bool data::valid() const
     {
         return registry::valid(_type_id)
-        && type_data::instance().types[_type_id].data.find(_id) != type_data::instance().types[_type_id].data.end();
+        && type_data::instance().types[_type_id].data.find(_id)
+        != type_data::instance().types[_type_id].data.end();
     }
 
     uint32_t data::id() const
@@ -73,6 +73,11 @@ namespace reflection
         if (!valid())
             return false;
         return type_data::instance().types[_type_id].data[_id].set(std::move(handle), value);
+    }
+
+    bool data::operator==(const data &rhs) const
+    {
+        return _id == rhs._id && _type_id == rhs._type_id;
     }
 
 
