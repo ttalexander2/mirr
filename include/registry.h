@@ -10,6 +10,8 @@
 namespace reflection
 {
 
+    class type_container;
+
     class registry
     {
     public:
@@ -28,8 +30,8 @@ namespace reflection
         }
 
         static type resolve(const std::string &name) noexcept;
-
         static type resolve(uint32_t id) noexcept;
+        static type_container resolve() noexcept;
 
         template<typename T>
         static type resolve() noexcept

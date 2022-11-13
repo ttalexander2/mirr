@@ -260,8 +260,8 @@ namespace reflection::internal
     template <typename... Args>
     [[nodiscard]] uint32_t unwrap_func_args(type_list<Args...>, const std::size_t index) noexcept
     {
-        uint32_t args[sizeof...(Args) + 1u]{type_hash_v<std::remove_cv_t<std::remove_reference_t<Args>>>...};
-        return args[index + 1u];
+        uint32_t args[sizeof...(Args) + 1u]{type_hash_v<Args>...};
+        return args[index];
     }
 
     template <typename Types>
@@ -294,29 +294,29 @@ namespace reflection::internal
         if constexpr (std::is_invocable_v<std::remove_reference_t<Func>, const Type&,
                 type_list_element_t<Index, typename descriptor::args_type>...>)
         {
-            if (const auto* clazz = handle.try_cast<const Type>(); clazz &&
-                ((args + Index)->can_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
+            if (const auto* clazz = handle.template try_cast<const Type>(); clazz &&
+                ((args + Index)->can_cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
             {
                 return invoke_with_args(std::forward<Func>(func), *clazz,
-                               (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+                               (args + Index)->cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
             }
         }
         else if constexpr (std::is_invocable_v<std::remove_reference_t<Func>, Type&,
                 type_list_element_t<Index, typename descriptor::args_type>...>)
         {
-            if (auto* clazz = handle.try_cast<Type>(); clazz &&
-                ((args + Index)->can_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
+            if (auto* clazz = handle.template try_cast<Type>(); clazz &&
+                ((args + Index)->can_cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
             {
                 return invoke_with_args(std::forward<Func>(func), *clazz,
-                               (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+                               (args + Index)->cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
             }
         }
         else
         {
-            if (((args + Index)->can_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
+            if (((args + Index)->template can_cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
             {
                 return invoke_with_args(std::forward<Func>(func),
-                        (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
+                        (args + Index)->cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
             }
         }
 
@@ -341,7 +341,6 @@ namespace reflection::internal
     {
         using From_ = std::remove_cv_t<std::remove_reference_t<From>>;
         using To_ = std::remove_cv_t<std::remove_reference_t<To>>;
-
 
         if constexpr (!std::is_same_v<decltype(Func), From_> && !std::is_same_v<decltype(Func), std::nullptr_t>)
         {
@@ -381,11 +380,10 @@ namespace reflection::internal
         using From_ = std::remove_cv_t<std::remove_reference_t<From>>;
         using To_ = std::remove_cv_t<std::remove_reference_t<To>>;
 
-
         From* val =  from.try_cast<From>();
         if (val == nullptr)
         {
-            return nullptr;
+            return any{};
         }
 
         if constexpr (std::is_constructible_v<To_, From>)

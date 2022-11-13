@@ -13,6 +13,7 @@ namespace reflection
     class handle;
     struct func_info;
     struct type_info;
+    class argument_container;
 
     template <typename T>
     class type_factory;
@@ -24,6 +25,7 @@ namespace reflection
         friend class any;
         friend class handle;
         friend class type;
+        friend class function_container;
 
         template<typename T>
         friend class type_factory;
@@ -43,7 +45,8 @@ namespace reflection
 
         [[nodiscard]] size_t arity() const;
         [[nodiscard]] reflection::type return_type() const;
-        [[nodiscard]] reflection::type arg_type(size_t index) const;
+        [[nodiscard]] reflection::type args(size_t index) const;
+        [[nodiscard]] argument_container args() const;
 
         [[maybe_unused]] any invoke_internal([[maybe_unused]] reflection::handle, any* args, size_t count) const;
 

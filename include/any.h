@@ -216,12 +216,42 @@ namespace reflection
             {
                 return static_cast<Type *>(this->data(id));
             }
+            return nullptr;
+        }
+
+        template <typename Type>
+        Type* try_cast_or_convert() noexcept
+        {
+            auto id = type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
+            if (id == type_info._id)
+            {
+                return static_cast<Type *>(this->data(id));
+            }
             else if (type_info.is_convertible<Type>())
             {
                 any result = try_conversion(id);
-                return result.try_cast<Type>();
+                reset();
+                if (result.vtable)
+                {
+                    result.vtable(internal::any_operation::move, result, this);
+                    type_info = result.type_info;
+                    vtable = result.vtable;
+                    policy = result.policy;
+                }
+                return try_cast<Type>();
             }
             return nullptr;
+        }
+
+        template <typename Type>
+        any convert() noexcept
+        {
+            auto id = type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
+            if (type_info.is_convertible<Type>())
+            {
+                return try_conversion(id);
+            }
+            return any{};
         }
 
         template <typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
@@ -231,13 +261,33 @@ namespace reflection
             return *ptr;
         }
 
+        template <typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
+        Ret cast_or_convert() noexcept
+        {
+            if (can_convert<Ret>())
+            {
+                any val = convert<Ret>();
+                return *val.try_cast<Ret>();
+            }
+            return *try_cast<Ret>();
+        }
+
         template <typename Type>
         bool can_cast() noexcept
         {
-
-            auto id = type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
-            std::cout << "can_cast: " << (try_cast<std::remove_cv_t<std::remove_reference_t<Type>>>() != nullptr) << "\n";
             return try_cast<std::remove_cv_t<std::remove_reference_t<Type>>>() != nullptr;
+        }
+
+        template <typename Type>
+        bool can_convert() noexcept
+        {
+            return type_info.is_convertible<Type>();
+        }
+
+        template <typename Type>
+        bool can_cast_or_convert()
+        {
+            return can_cast<Type>() || can_convert<Type>();
         }
 
     private:

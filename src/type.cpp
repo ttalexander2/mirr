@@ -3,6 +3,8 @@
 #include "../include/registry.h"
 #include "../include/data.h"
 #include "../include/function.h"
+#include "../include/data_container.h"
+#include "../include/function_container.h"
 
 namespace reflection
 {
@@ -152,6 +154,17 @@ namespace reflection
     {
         if (!valid())
             return false;
-        return type_data::instance().types[_id].conversions.find(type_id) != type_data::instance().types[_id].conversions.end();
+        return type_data::instance().types[_id].conversions.find(type_id) !=
+               type_data::instance().types[_id].conversions.end();
+    }
+
+    reflection::data_container type::data() const
+    {
+        return reflection::data_container(_id);
+    }
+
+    reflection::function_container type::function() const
+    {
+        return reflection::function_container(_id);
     }
 }

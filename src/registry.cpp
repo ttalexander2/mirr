@@ -1,6 +1,7 @@
 #include <limits>
 #include "../include/registry.h"
 #include "../include/type_factory.h"
+#include "../include/type_container.h"
 
 namespace reflection
 {
@@ -13,6 +14,11 @@ namespace reflection
     type registry::resolve(uint32_t id) noexcept
     {
         return type(id);
+    }
+
+    type_container registry::resolve() noexcept
+    {
+        return type_container();
     }
 
     bool registry::valid(uint32_t id)

@@ -6,21 +6,22 @@
 
 struct test_type
 {
-    test_type(const std::string &name, int val) : value(val), name(name)
+    test_type(const std::string &name, int val) : value(val), name(name), other(0)
     {
 
     }
 
     int value;
     std::string name;
+    const int other;
 
     operator int()
     { return value; }
 
-    int get_value() const { return value; }
+    [[nodiscard]] int get_value() const { return value; }
     void set_value(int val) { value = val;}
 
-    void foo(const std::string& a, const std::string& b)
+    static void foo(const std::string& a, const std::string& b)
     {
         std::cout << "test_type::foo called\n";
         std::cout << a << "\n";
@@ -28,26 +29,33 @@ struct test_type
     }
 };
 
-std::string c_str_to_string(const char* str)
-{
-    return std::string{str};
-}
-
 
 int main()
 {
     reflection::registry::register_type<void>("void");
+    reflection::registry::register_type<uint8_t>("uint8");
+    reflection::registry::register_type<uint16_t>("uint16");
+    reflection::registry::register_type<uint32_t>("uint32");
+    reflection::registry::register_type<uint64_t>("uint64");
+    reflection::registry::register_type<int8_t>("int8");
+    reflection::registry::register_type<int16_t>("int16");
+    reflection::registry::register_type<int32_t>("int32");
+    reflection::registry::register_type<int64_t>("int64");
+    reflection::registry::register_type<float>("float");
+    reflection::registry::register_type<double>("double");
+    reflection::registry::register_type<char>("char");
     reflection::registry::register_type<std::unique_ptr<void>>("unique_ptr");
-    reflection::registry::register_type<std::string>("string")
+    reflection::registry::register_type<std::string>("std::string")
             .conversion<const char*, &std::string::c_str>();
     reflection::registry::register_type<const char*>("cstring")
-            .conversion<std::string, &c_str_to_string>();
-    reflection::registry::register_type<int>("int");
+            .conversion<std::string>();
 
     reflection::registry::register_type<test_type>("test_type")
             .conversion<int>()
             .ctor<const std::string &, int>()
             .data<&test_type::get_value, &test_type::set_value>("value")
+            .data<&test_type::name>("name")
+            .data<&test_type::other>("other")
             .function<&test_type::foo>("foo");
 
 
@@ -86,44 +94,34 @@ int main()
     std::cout << val.cast<int>() << "\n";
 
 
-    std::cout << "string type id: " << reflection::registry::resolve<std::string>().id() << "\n";
     auto f = type.function("foo");
-    //f.invoke(instance, "ayyy", "beeee");
+    f.invoke(instance, "peepee", "poopoo");
 
-    reflection::any string = "instance";
-    std::cout << "try_cast: " << *string.try_cast<std::string>() << "\n";
+    std::cout << "\n";
+
+    for (auto data : type.data())
+    {
+        std::cout << data.name() << "\n";
+    }
+
+    std::cout << "\n";
+    
+    for (auto func : type.function())
+    {
+        std::cout << func.name() << "\n";
+        for (auto arg : func.args())
+        {
+            std::cout << "\t" << arg.name() << "\n";
+        }
+    }
 
 
 
-
-
-
-    //reflection::registry::register_type<std::unique_ptr<test_type>>("std::unique_ptr<test_type>");
-
-    //auto test = std::make_unique<test_type>("test name", 76);
-
-    //auto any = reflection::any(std::move(test));
-
-    //std::cout << "type name: " << any.type().name() << "\n";
-    //std::cout << "pointer?: " << any.type().is_pointer() << "\n";
-    //std::cout << "pointer like?: " << any.type().is_pointer_like() << "\n";
-    //std::cout << "underlying type: " << any.type().underlying_type().name() << "\n";
-
-    //test_type* result = *static_cast<test_type**>(any.data());
-    //std::cout << result->name << "\n";
-    //std::cout << result->value << "\n";
-    //
-    //test.name = "changed name";
-    //std::cout << result->name << "\n";
-
-    //int x = 4;
-    //reflection::handle h = reflection::handle(&x);
-    //int** ptr = h.try_cast<int*>();
-    //if (ptr)
+    //for (auto t : reflection::registry::resolve())
     //{
-    //    **ptr = 8;
-    //    std::cout << x << "\n";
+    //    std::cout << t.name() << "\n";
     //}
+
 
     return 0;
 }

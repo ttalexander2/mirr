@@ -17,6 +17,8 @@ namespace reflection
     struct type_info;
     class data;
     class function;
+    class data_container;
+    class function_container;
 
     template<typename T>
     class type_factory;
@@ -30,7 +32,8 @@ namespace reflection
         friend class handle;
         friend class data;
         friend class function;
-
+        friend class type_container;
+        friend class argument_container;
 
         template<typename T>
         friend
@@ -80,9 +83,11 @@ namespace reflection
 
         [[nodiscard]] reflection::data data(const std::string& name) const;
         [[nodiscard]] reflection::data data(uint32_t id) const;
+        [[nodiscard]] reflection::data_container data() const;
 
         [[nodiscard]] reflection::function function(const std::string& name) const;
         [[nodiscard]] reflection::function function(uint32_t id) const;
+        [[nodiscard]] reflection::function_container function() const;
 
 
         [[nodiscard]] bool is_convertible(uint32_t type_id) const;
@@ -102,5 +107,6 @@ namespace reflection
     private:
         explicit type(type_id id);
         type_id _id;
+
     };
 }

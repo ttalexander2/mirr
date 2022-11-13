@@ -50,11 +50,11 @@ namespace reflection
             static_assert(internal::is_convertible_v<From_, To_>,
                     "Type is not convertable.");
 
-            type_info* to_info = get_type_info<std::decay_t<To>>();
+            type_info* to_info = get_type_info<To>();
             if (to_info == nullptr)
             {
-                type_factory<std::decay_t<To>>::register_type();
-                to_info = get_type_info<std::decay_t<To>>();
+                type_factory<To>::register_type();
+                to_info = get_type_info<To>();
             }
 
             if (to_info != nullptr)
@@ -75,11 +75,11 @@ namespace reflection
         template <typename To, auto Func>
         type_factory<Type> &conversion() noexcept
         {
-            type_info* to_info = get_type_info<std::decay_t<To>>();
+            type_info* to_info = get_type_info<To>();
             if (to_info == nullptr)
             {
-                type_factory<std::decay_t<To>>::register_type();
-                to_info = get_type_info<std::decay_t<To>>();
+                type_factory<To>::register_type();
+                to_info = get_type_info<To>();
             }
 
             if (to_info != nullptr)
@@ -171,6 +171,7 @@ namespace reflection
         template<auto Getter, auto Setter>
         type_factory &data(const std::string &name, bool serialize = true)
         {
+            static_assert(!std::is_same_v<decltype(Getter), std::nullptr_t>, "Getter cannot be nullptr!");
             uint32_t hash = basic_hash<uint32_t>::hash(name);
             type_info *info = _type.info();
             if (info != nullptr)
@@ -197,7 +198,7 @@ namespace reflection
                 }
                 else
                 {
-                    using data_type = std::remove_reference_t<std::remove_pointer_t<decltype(Getter)>>;
+                    using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Getter), Type &>>;
 
                     type_factory<data_type>::register_type();
                     data.type_id = type_hash_v<data_type>;
@@ -228,7 +229,6 @@ namespace reflection
                 func.return_type = type_hash_v<typename descriptor::return_type>;
                 func.arg = &internal::func_arg<typename descriptor::args_type>;
                 func.invoke = &internal::func_invoke<Type, Func>;
-
                 info->functions[hash] = func;
             }
 
@@ -276,11 +276,12 @@ namespace reflection
         static void register_type()
         {
             auto id = type_hash<Type>::value();
-            //std::cout << "registered: " << id << "\n";
+
 
             if (type_data::instance().types.find(id) == type_data::instance().types.end())
             {
                 type_info info;
+                info.name = typeid(Type).name();
                 info.id = id;
                 info.flags = type_data::get_flags<Type>();
                 info.underlying_type_id = get_underlying_type();

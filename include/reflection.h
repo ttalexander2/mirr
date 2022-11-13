@@ -7,12 +7,13 @@
 #include "data.h"
 #include "function.h"
 #include "registry.h"
+#include "data_container.h"
+#include "function_container.h"
+#include "type_container.h"
+#include "argument_container.h"
 
 namespace reflection
 {
-#ifndef REFLECT
-#define REFLECT
 
-#endif
 
 }

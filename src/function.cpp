@@ -2,6 +2,7 @@
 
 #include "../include/type_data.h"
 #include "../include/registry.h"
+#include "../include/argument_container.h"
 
 namespace reflection
 {
@@ -61,7 +62,7 @@ namespace reflection
         return registry::resolve<void>();
     }
 
-    reflection::type function::arg_type(size_t index) const
+    reflection::type function::args(size_t index) const
     {
         if (valid())
             return reflection::type(type_data::instance().types[_type_id].functions[_id].arg(index));
@@ -73,5 +74,10 @@ namespace reflection
         if (valid())
             return type_data::instance().types[_type_id].functions[_id].invoke(std::move(handle), args);
         return any{};
+    }
+
+    argument_container function::args() const
+    {
+        return argument_container(_type_id, _id);
     }
 }

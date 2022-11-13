@@ -26,6 +26,7 @@ namespace reflection
         friend class any;
         friend class handle;
         friend class type;
+        friend class data_container;
 
         template<typename T>
         friend class type_factory;
@@ -55,5 +56,7 @@ namespace reflection
         uint32_t _id;
         uint32_t _type_id;
     };
+
+
 
 }

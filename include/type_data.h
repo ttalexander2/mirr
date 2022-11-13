@@ -86,10 +86,14 @@ namespace reflection
     class type_data
     {
         friend class type;
+        friend class type_container;
         friend class data;
+        friend class data_container;
         friend class function;
+        friend class function_container;
         friend class registry;
         friend class any;
+        friend class argument_container;
 
         template<typename T>
         friend
@@ -136,11 +140,11 @@ namespace reflection
             {
                 flags |= type_flags::is_pointer_like;
             }
-            if (internal::is_sequence_container_v < T >)
+            if (internal::is_sequence_container_v<T>)
             {
                 flags |= type_flags::is_sequence_container;
             }
-            if (internal::is_associative_container_v < T >)
+            if (internal::is_associative_container_v<T>)
             {
                 flags |= type_flags::is_associative_container;
             }
