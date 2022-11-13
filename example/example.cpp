@@ -95,7 +95,7 @@ int main()
 
 
     auto f = type.function("foo");
-    f.invoke(instance, "peepee", "poopoo");
+    f.invoke(instance, "a", "b");
 
     std::cout << "\n";
 
@@ -105,7 +105,7 @@ int main()
     }
 
     std::cout << "\n";
-    
+
     for (auto func : type.function())
     {
         std::cout << func.name() << "\n";
