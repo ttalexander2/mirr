@@ -7,9 +7,8 @@
 #include "type_factory.h"
 
 
-namespace reflection
+namespace mirr
 {
-
     class type_container;
 
     class registry
@@ -23,20 +22,16 @@ namespace reflection
             return type_factory<T>(name);
         }
 
-        template<template<typename> typename T>
-        static auto register_type(const std::string &name)
-        {
-            return template_type_factory<T>(name);
-        }
-
         static type resolve(const std::string &name) noexcept;
+
         static type resolve(uint32_t id) noexcept;
+
         static type_container resolve() noexcept;
 
         template<typename T>
         static type resolve() noexcept
         {
-            uint32_t hash = type_hash<std::decay_t<T>>::value();
+            uint32_t hash = internal::type_hash<std::decay_t<T>>::value();
             auto val = type_data::instance().types.find(hash);
             if (val == type_data::instance().types.end())
             {
@@ -47,10 +42,11 @@ namespace reflection
         }
 
         static bool valid(const std::string &name);
+
         static bool valid(uint32_t id);
 
     private:
         static uint32_t id_from_name(const std::string &name);
     };
 
-} // reflection
+} // mirr

@@ -1,20 +1,20 @@
-#include "../include/function_container.h"
+#include "mirr/iterators/function_container.h"
 
-namespace reflection
+namespace mirr
 {
     function_container::function_container(uint32_t type_id) : _type_id(type_id)
     {
 
     }
 
-    function_container::iterator function_container::begin() const  // NOLINT(readability-make-member-function-const)
+    function_container::iterator function_container::begin() const  // NOLINT(readability-make-member-func-const)
     {
         if (!valid())
             return {};
         return function_container::iterator(_type_id, type_data::instance().types[_type_id].functions.begin());
     }
 
-    function_container::iterator function_container::end() const // NOLINT(readability-make-member-function-const)
+    function_container::iterator function_container::end() const // NOLINT(readability-make-member-func-const)
     {
         if (!valid())
             return {};
@@ -27,7 +27,7 @@ namespace reflection
     }
 
     function_container::iterator::iterator(uint32_t id, std::unordered_map<uint32_t, func_info>::iterator iterator)
-            :itr(iterator), _type_id(id)
+            : itr(iterator), _type_id(id)
     {
     }
 
@@ -59,7 +59,7 @@ namespace reflection
         return function(itr->first, _type_id);
     }
 
-    function_container::iterator::pointer function_container::iterator::operator->()
+    function_container::iterator::pointer function_container::iterator::operator->() const
     {
         return function(itr->first, _type_id);
     }

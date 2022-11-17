@@ -5,20 +5,31 @@
 #include "type_flags.h"
 #include "type_hash.h"
 
-namespace reflection
+namespace mirr
 {
 
     // Forward declarations
     class type_data;
+
     class func_data;
+
     class registry;
+
     class any;
+
     class handle;
+
     struct type_info;
+
     class data;
+
     class function;
+
     class data_container;
+
     class function_container;
+
+    class constructor_container;
 
     template<typename T>
     class type_factory;
@@ -26,14 +37,26 @@ namespace reflection
     class type
     {
         friend class type_data;
+
         friend class func_data;
+
         friend class registry;
+
         friend class any;
+
         friend class handle;
+
         friend class data;
+
         friend class function;
+
         friend class type_container;
+
         friend class argument_container;
+
+        friend class constructor;
+
+        friend class constructor_container;
 
         template<typename T>
         friend
@@ -81,21 +104,27 @@ namespace reflection
 
         [[nodiscard]] type underlying_type() const;
 
-        [[nodiscard]] reflection::data data(const std::string& name) const;
-        [[nodiscard]] reflection::data data(uint32_t id) const;
-        [[nodiscard]] reflection::data_container data() const;
+        [[nodiscard]] mirr::data data(const std::string &name) const;
 
-        [[nodiscard]] reflection::function function(const std::string& name) const;
-        [[nodiscard]] reflection::function function(uint32_t id) const;
-        [[nodiscard]] reflection::function_container function() const;
+        [[nodiscard]] mirr::data data(uint32_t id) const;
+
+        [[nodiscard]] mirr::data_container data() const;
+
+        [[nodiscard]] mirr::function func(const std::string &name) const;
+
+        [[nodiscard]] mirr::function func(uint32_t id) const;
+
+        [[nodiscard]] mirr::function_container func() const;
+
+        [[nodiscard]] mirr::constructor_container ctor() const;
 
 
         [[nodiscard]] bool is_convertible(uint32_t type_id) const;
 
-        template <typename To>
+        template<typename To>
         [[nodiscard]] bool is_convertible() const
         {
-            return is_convertible(type_hash_v<To>);
+            return is_convertible(internal::type_hash_v<To>);
         }
 
         // Provides the type flags, containing the data for the boolean properties of this type.
@@ -106,6 +135,7 @@ namespace reflection
 
     private:
         explicit type(type_id id);
+
         type_id _id;
 
     };

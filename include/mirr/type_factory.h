@@ -11,7 +11,7 @@
 #include "type_hash.h"
 #include "util.h"
 
-namespace reflection
+namespace mirr
 {
 
     template<typename Type>
@@ -48,9 +48,9 @@ namespace reflection
             using To_ = std::remove_cv_t<std::remove_reference_t<To>>;
 
             static_assert(internal::is_convertible_v<From_, To_>,
-                    "Type is not convertable.");
+                          "Type is not convertable.");
 
-            type_info* to_info = get_type_info<To>();
+            type_info *to_info = get_type_info<To>();
             if (to_info == nullptr)
             {
                 type_factory<To>::register_type();
@@ -72,10 +72,10 @@ namespace reflection
             return *this;
         }
 
-        template <typename To, auto Func>
+        template<typename To, auto Func>
         type_factory<Type> &conversion() noexcept
         {
-            type_info* to_info = get_type_info<To>();
+            type_info *to_info = get_type_info<To>();
             if (to_info == nullptr)
             {
                 type_factory<To>::register_type();
@@ -100,19 +100,51 @@ namespace reflection
         template<typename... Args>
         type_factory<Type> &ctor() noexcept
         {
+            static_assert(std::is_constructible_v<Type, Args...>,
+                          "Type cannot be constructed with the given arguments.");
+
             type_info *info = _type.info();
             if (info != nullptr)
             {
-                ctor_info ctor;
+                ctor_info ctor{};
+                // Since we don't require an identifier for constructor, we'll just concat the typeid names for now...
+                ctor.id = internal::constructor_counter::next();
                 ctor.type_id = _type.id();
                 ctor.arity = sizeof...(Args);
                 // Register the types
                 (type_factory<Args>::register_type(), ...);
 
-                // Add the constructor arguments to the ctor_info
-                (ctor.args.push_back(type_hash<Args>::value()), ...);
 
-                info->constructors.push_back(ctor);
+                ctor.arg = &internal::ctor_arg<Args...>;
+                ctor.invoke = &internal::construct<Type, Args...>;
+
+                info->constructors[ctor.id] = ctor;
+            }
+
+            return *this;
+        }
+
+        template<auto Func>
+        type_factory<Type> &ctor() noexcept
+        {
+            using descriptor = internal::function_helper_t<Type, decltype(Func)>;
+
+            static_assert(std::is_same_v<typename descriptor::return_type, Type>,
+                          "Ctor func should return an object of the matching type.");
+
+            type_info *info = _type.info();
+            if (info != nullptr)
+            {
+                ctor_info ctor{};
+                // Since we don't require an identifier for constructor, we'll just concat the typeid names for now...
+                ctor.id = internal::constructor_counter::next();
+                ctor.type_id = _type.id();
+                ctor.arity = descriptor::args_type::size;
+
+                ctor.arg = &internal::func_arg<typename descriptor::args_type>;
+                ctor.invoke = &internal::construct<Type, Func>;
+
+                info->constructors[ctor.id] = ctor;
             }
 
             return *this;
@@ -140,7 +172,7 @@ namespace reflection
                     using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Data), Type &>>;
 
                     type_factory<data_type>::register_type();
-                    data.type_id = type_hash_v<data_type>;
+                    data.type_id = internal::type_hash_v<data_type>;
                     if (std::is_const_v<data_type>)
                     {
                         data.flags |= data_flags::is_const;
@@ -152,7 +184,7 @@ namespace reflection
                     using data_type = std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>;
 
                     type_factory<data_type>::register_type();
-                    data.type_id = type_hash_v<data_type>;
+                    data.type_id = internal::type_hash_v<data_type>;
                     if (std::is_same_v<Type, std::remove_const_t<data_type>> || std::is_const_v<data_type>)
                     {
                         data.flags |= data_flags::is_const;
@@ -191,17 +223,16 @@ namespace reflection
                     using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Getter), Type &>>;
 
                     type_factory<data_type>::register_type();
-                    data.type_id = type_hash_v<data_type>;
+                    data.type_id = internal::type_hash_v<data_type>;
                     data.get = &internal::get_function<Type, Getter>;
                     data.set = &internal::set_function<Type, Setter>;
                     data.flags |= data_flags::is_const;
-                }
-                else
+                } else
                 {
                     using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Getter), Type &>>;
 
                     type_factory<data_type>::register_type();
-                    data.type_id = type_hash_v<data_type>;
+                    data.type_id = internal::type_hash_v<data_type>;
                     data.flags |= data_flags::is_static;
                     data.get = &internal::get_function<Type, Getter>;
                     data.set = &internal::set_function<Type, Setter>;
@@ -226,7 +257,7 @@ namespace reflection
                 func.id = hash;
                 func.name = name;
                 func.arity = descriptor::args_type::size;
-                func.return_type = type_hash_v<typename descriptor::return_type>;
+                func.return_type = internal::type_hash_v<typename descriptor::return_type>;
                 func.arg = &internal::func_arg<typename descriptor::args_type>;
                 func.invoke = &internal::func_invoke<Type, Func>;
                 info->functions[hash] = func;
@@ -236,19 +267,19 @@ namespace reflection
         }
 
     private:
-        explicit type_factory(const std::string &name) : _type(type_hash<Type>::value())
+        explicit type_factory(const std::string &name) : _type(internal::type_hash<Type>::value())
         {
             register_type(name);
         }
 
-        explicit type_factory() : _type(type_hash<Type>::value())
+        explicit type_factory() : _type(internal::type_hash<Type>::value())
         {
             register_type();
         }
 
         static void register_type(const std::string &name)
         {
-            auto id = type_hash<Type>::value();
+            auto id = internal::type_hash<Type>::value();
             auto hash = basic_hash<uint32_t>::hash(name);
 
             if (type_data::instance().types.find(id) == type_data::instance().types.end())
@@ -261,8 +292,7 @@ namespace reflection
 
                 type_data::instance().type_aliases[hash] = id;
                 type_data::instance().types[id] = info;
-            }
-            else
+            } else
             {
                 type_info *info = get_type_info<Type>();
                 if (info != nullptr)
@@ -275,7 +305,7 @@ namespace reflection
 
         static void register_type()
         {
-            auto id = type_hash<Type>::value();
+            auto id = internal::type_hash<Type>::value();
 
 
             if (type_data::instance().types.find(id) == type_data::instance().types.end())
@@ -298,13 +328,13 @@ namespace reflection
                 return factory._type._id;
             }
 
-            return type_hash<void>::value();
+            return internal::type_hash<void>::value();
         }
 
         template<typename T>
         static type_info *get_type_info()
         {
-            type t(type_hash<T>::value());
+            type t(internal::type_hash<T>::value());
             if (t.valid())
             {
                 return t.info();
@@ -315,16 +345,5 @@ namespace reflection
         }
 
         type _type;
-    };
-
-
-    template<template<typename> typename T>
-    class template_type_factory : public type_factory<T<void>>
-    {
-    public:
-        explicit template_type_factory(const std::string& name) : type_factory<T<void>>(name)
-        {
-
-        }
     };
 }

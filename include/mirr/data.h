@@ -4,14 +4,18 @@
 #include "type.h"
 #include "any.h"
 
-namespace reflection
+namespace mirr
 {
 
     // Forward declarations
     class type_data;
+
     class registry;
+
     class any;
+
     class handle;
+
     struct data_info;
     struct type_info;
 
@@ -22,41 +26,55 @@ namespace reflection
     class data
     {
         friend class type_data;
+
         friend class registry;
+
         friend class any;
+
         friend class handle;
+
         friend class type;
+
         friend class data_container;
 
         template<typename T>
-        friend class type_factory;
+        friend
+        class type_factory;
 
     public:
         data();
-        data(const data&) = default;
 
-        bool operator==(const data&rhs) const;
+        data(const data &) = default;
+
+        bool operator==(const data &rhs) const;
 
         [[nodiscard]] bool valid() const;
-        explicit operator bool() const { return valid(); }
+
+        explicit operator bool() const
+        { return valid(); }
 
         [[nodiscard]] uint32_t id() const;
+
         [[nodiscard]] std::string name() const;
-        [[nodiscard]] reflection::type type() const;
+
+        [[nodiscard]] mirr::type type() const;
 
         [[nodiscard]] bool is_serialized() const;
+
         [[nodiscard]] bool is_const() const;
+
         [[nodiscard]] bool is_static() const;
 
-        [[nodiscard]] any get(reflection::handle handle) const;
-        [[nodiscard]] bool set(reflection::handle handle, const any& value) const;
+        [[nodiscard]] any get(mirr::handle handle) const;
+
+        [[nodiscard]] bool set(mirr::handle handle, const any &value) const;
 
     private:
         explicit data(uint32_t id, uint32_t type_id);
+
         uint32_t _id;
         uint32_t _type_id;
     };
-
 
 
 }

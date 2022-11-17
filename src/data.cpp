@@ -1,10 +1,10 @@
-#include "../include/data.h"
+#include "mirr/data.h"
 
 #include <utility>
-#include "../include/type_data.h"
-#include "../include/registry.h"
+#include "mirr/type_data.h"
+#include "mirr/registry.h"
 
-namespace reflection
+namespace mirr
 {
     data::data() : _id(0), _type_id(registry::resolve<void>().id())
     {
@@ -19,8 +19,8 @@ namespace reflection
     bool data::valid() const
     {
         return registry::valid(_type_id)
-        && type_data::instance().types[_type_id].data.find(_id)
-        != type_data::instance().types[_type_id].data.end();
+               && type_data::instance().types[_type_id].data.find(_id)
+                  != type_data::instance().types[_type_id].data.end();
     }
 
     uint32_t data::id() const
@@ -35,7 +35,7 @@ namespace reflection
         return std::string{};
     }
 
-    reflection::type data::type() const
+    mirr::type data::type() const
     {
         return registry::resolve(_type_id);
     }
@@ -61,14 +61,14 @@ namespace reflection
         return false;
     }
 
-    any data::get(reflection::handle handle) const
+    any data::get(mirr::handle handle) const
     {
         if (!valid())
             return any{};
         return type_data::instance().types[_type_id].data[_id].get(std::move(handle));
     }
 
-    bool data::set(reflection::handle handle, const any& value) const
+    bool data::set(mirr::handle handle, const any &value) const
     {
         if (!valid())
             return false;
@@ -79,7 +79,6 @@ namespace reflection
     {
         return _id == rhs._id && _type_id == rhs._type_id;
     }
-
 
 
 }

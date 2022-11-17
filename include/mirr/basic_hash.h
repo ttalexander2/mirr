@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <string>
 
-namespace reflection
+namespace mirr
 {
 
     class type;
@@ -76,9 +76,9 @@ namespace reflection
 namespace std
 {
     template<>
-    struct hash<reflection::string_hash>
+    struct hash<mirr::string_hash>
     {
-        std::size_t operator()(const reflection::string_hash &hash) const
+        std::size_t operator()(const mirr::string_hash &hash) const
         {
             return hash;
         }

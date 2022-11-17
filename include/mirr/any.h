@@ -7,7 +7,7 @@
 #include "type_hash.h"
 #include "type_traits.h"
 
-namespace reflection
+namespace mirr
 {
 
 
@@ -34,6 +34,7 @@ namespace reflection
 
 
     class any;
+
     class handle;
 
 
@@ -57,7 +58,7 @@ namespace reflection
 
         any() noexcept // NOLINT(cppcoreguidelines-pro-type-member-init)
                 : instance{},
-                  type_info{type_hash<void>::value()},
+                  type_info{internal::type_hash<void>::value()},
                   policy{internal::any_policy::owner},
                   vtable{}
         {}
@@ -129,7 +130,7 @@ namespace reflection
         }
 
         template<typename Type>
-        std::enable_if_t<!std::is_same_v<std::decay_t<Type>, any>, any&> // NOLINT(misc-unconventional-assign-operator)
+        std::enable_if_t<!std::is_same_v<std::decay_t<Type>, any>, any &> // NOLINT(misc-unconventional-assign-operator)
         operator=(Type &&value)
         {
             emplace<std::decay_t<Type>>(std::forward<Type>(value));
@@ -149,7 +150,8 @@ namespace reflection
         [[nodiscard]] void *data() noexcept
         {
             return (!vtable || policy == internal::any_policy::cref) ? nullptr
-            : const_cast<void *>(vtable(internal::any_operation::get, *this, nullptr));
+                                                                     : const_cast<void *>(vtable(
+                            internal::any_operation::get, *this, nullptr));
         }
 
         [[nodiscard]] void *data(type_id info) noexcept
@@ -158,7 +160,7 @@ namespace reflection
         }
 
 
-        [[nodiscard]] const reflection::type &type() const noexcept
+        [[nodiscard]] const mirr::type &type() const noexcept
         {
             return type_info;
         }
@@ -175,7 +177,7 @@ namespace reflection
                 vtable(internal::any_operation::destroy, *this, nullptr);
             }
 
-            type_info._id = type_hash_v<void>;
+            type_info._id = internal::type_hash_v<void>;
             vtable = nullptr;
             policy = internal::any_policy::owner;
         }
@@ -189,29 +191,32 @@ namespace reflection
 
         bool assign(const any &other)
         {
-            if (vtable && policy != internal::any_policy::cref && type_info == other.type_info) {
+            if (vtable && policy != internal::any_policy::cref && type_info == other.type_info)
+            {
                 return (vtable(internal::any_operation::assign, *this, other.data()) != nullptr);
             }
             return false;
         }
 
-        [[nodiscard]] explicit operator bool() const noexcept {
+        [[nodiscard]] explicit operator bool() const noexcept
+        {
             return vtable != nullptr;
         }
 
         bool operator==(const any &other) const noexcept
         {
-            if (vtable && type_info == other.type_info) {
+            if (vtable && type_info == other.type_info)
+            {
                 return (vtable(internal::any_operation::compare, *this, other.data()) != nullptr);
             }
             return (!vtable && !other.vtable);
         }
 
 
-        template <typename Type>
-        Type* try_cast() noexcept
+        template<typename Type>
+        Type *try_cast() noexcept
         {
-            auto id = type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
+            auto id = internal::type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
             if (id == type_info._id)
             {
                 return static_cast<Type *>(this->data(id));
@@ -219,15 +224,14 @@ namespace reflection
             return nullptr;
         }
 
-        template <typename Type>
-        Type* try_cast_or_convert() noexcept
+        template<typename Type>
+        Type *try_cast_or_convert() noexcept
         {
-            auto id = type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
+            auto id = internal::type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
             if (id == type_info._id)
             {
                 return static_cast<Type *>(this->data(id));
-            }
-            else if (type_info.is_convertible<Type>())
+            } else if (type_info.is_convertible<Type>())
             {
                 any result = try_conversion(id);
                 reset();
@@ -243,10 +247,10 @@ namespace reflection
             return nullptr;
         }
 
-        template <typename Type>
+        template<typename Type>
         any convert() noexcept
         {
-            auto id = type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
+            auto id = internal::type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
             if (type_info.is_convertible<Type>())
             {
                 return try_conversion(id);
@@ -254,14 +258,14 @@ namespace reflection
             return any{};
         }
 
-        template <typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
+        template<typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
         Ret cast() noexcept
         {
-            Ret* ptr = this->try_cast<Ret>();
+            Ret *ptr = this->try_cast<Ret>();
             return *ptr;
         }
 
-        template <typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
+        template<typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
         Ret cast_or_convert() noexcept
         {
             if (can_convert<Ret>())
@@ -272,19 +276,19 @@ namespace reflection
             return *try_cast<Ret>();
         }
 
-        template <typename Type>
+        template<typename Type>
         bool can_cast() noexcept
         {
             return try_cast<std::remove_cv_t<std::remove_reference_t<Type>>>() != nullptr;
         }
 
-        template <typename Type>
+        template<typename Type>
         bool can_convert() noexcept
         {
             return type_info.is_convertible<Type>();
         }
 
-        template <typename Type>
+        template<typename Type>
         bool can_cast_or_convert()
         {
             return can_cast<Type>() || can_convert<Type>();
@@ -298,7 +302,7 @@ namespace reflection
         {
             if constexpr (!std::is_void_v<Type>)
             {
-                type_info._id = type_hash_v<Type>;
+                type_info._id = internal::type_hash_v<Type>;
                 vtable = basic_vtable<std::remove_cv_t<std::remove_reference_t<Type>>>;
 
                 if constexpr (std::is_lvalue_reference_v<Type>)
@@ -320,15 +324,13 @@ namespace reflection
                     if constexpr (sizeof...(Args) != 0u && std::is_aggregate_v<Type>)
                     {
                         instance = new Type{std::forward<Args>(args)...};
-                    }
-                    else if constexpr (!std::is_abstract<Type>())
+                    } else if constexpr (!std::is_abstract<Type>())
                     {
                         instance = new Type(std::forward<Args>(args)...);
                     }
                 }
             }
         }
-
 
 
         template<typename Type>
@@ -417,18 +419,18 @@ namespace reflection
             const void *instance{};
             storage_type storage;
         };
-        reflection::type type_info{};
+        mirr::type type_info{};
         internal::any_policy policy = internal::any_policy::owner;
         vtable_type *vtable;
     };
 
-    class handle : public reflection::any
+    class handle : public mirr::any
     {
     public:
         template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, any>>>
-        handle(Type& value) // NOLINT(google-explicit-constructor)
+        handle(Type &value) // NOLINT(google-explicit-constructor)
         {
-            initialize<Type&>(std::forward<Type&>(value));
+            initialize<Type &>(std::forward<Type &>(value));
         }
     };
 

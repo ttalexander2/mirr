@@ -1,7 +1,7 @@
-#include "../include/type_factory.h"
+#include "mirr/type_factory.h"
 
 
-namespace reflection
+namespace mirr
 {
 
 }

@@ -2,12 +2,11 @@
 // Created by Thomas on 10/31/2022.
 //
 
-#include "../include/type_data.h"
+#include "mirr/type_data.h"
+#include "mirr/type.h"
 
-#include "../include/type.h"
 
-
-namespace reflection
+namespace mirr
 {
 
 }

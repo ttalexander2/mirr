@@ -1,10 +1,10 @@
-#include "../include/argument_container.h"
+#include "mirr/iterators/argument_container.h"
 
-namespace reflection
+namespace mirr
 {
 
     argument_container::iterator::iterator(uint32_t type_id, uint32_t func_id, size_t arity)
-        :_type_id(type_id), _func_id(func_id), arity(arity)
+            : _type_id(type_id), _func_id(func_id), arity(arity)
     {
 
     }
@@ -43,7 +43,7 @@ namespace reflection
     }
 
     argument_container::argument_container(uint32_t type_id, uint32_t func_id)
-        :_type_id(type_id), _func_id(func_id)
+            : _type_id(type_id), _func_id(func_id)
     {
 
     }
@@ -51,7 +51,8 @@ namespace reflection
     bool argument_container::valid() const
     {
         return type_data::instance().types.find(_type_id) != type_data::instance().types.end()
-        && type_data::instance().types[_type_id].functions.find(_func_id) != type_data::instance().types[_type_id].functions.end();
+               && type_data::instance().types[_type_id].functions.find(_func_id)
+                  != type_data::instance().types[_type_id].functions.end();
     }
 
     argument_container::iterator argument_container::begin() const
@@ -65,7 +66,7 @@ namespace reflection
     {
         if (!valid())
             return {};
-        auto it =  argument_container::iterator(_type_id, _func_id, arity());
+        auto it = argument_container::iterator(_type_id, _func_id, arity());
         it.index = arity();
         return it;
     }

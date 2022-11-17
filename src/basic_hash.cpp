@@ -1,6 +1,6 @@
-#include "../include/basic_hash.h"
+#include "mirr/basic_hash.h"
 
-namespace reflection
+namespace mirr
 {
 
 }

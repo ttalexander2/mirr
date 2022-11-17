@@ -1,20 +1,20 @@
-#include "../include/type_container.h"
+#include "mirr/iterators/type_container.h"
 
-namespace reflection
+namespace mirr
 {
 
-    type_container::iterator type_container::begin() const  // NOLINT(readability-make-member-function-const)
+    type_container::iterator type_container::begin() const  // NOLINT(readability-make-member-func-const)
     {
         return type_container::iterator(type_data::instance().types.begin());
     }
 
-    type_container::iterator type_container::end() const // NOLINT(readability-make-member-function-const)
+    type_container::iterator type_container::end() const // NOLINT(readability-make-member-func-const)
     {
         return type_container::iterator(type_data::instance().types.end());
     }
 
     type_container::iterator::iterator(std::unordered_map<uint32_t, type_info>::iterator iterator)
-            :itr(iterator)
+            : itr(iterator)
     {
     }
 

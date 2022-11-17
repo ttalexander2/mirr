@@ -1,6 +1,6 @@
 #pragma once
 
-namespace reflection
+namespace mirr
 {
     enum class type_flags : uint16_t
     {
@@ -117,7 +117,6 @@ namespace reflection
             return (val & flags) != data_flags::none;
         }
     }
-
 
 
 }

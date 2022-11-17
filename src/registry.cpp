@@ -1,9 +1,9 @@
-#include <limits>
-#include "../include/registry.h"
-#include "../include/type_factory.h"
-#include "../include/type_container.h"
+#include "mirr/registry.h"
 
-namespace reflection
+#include <limits>
+#include "mirr/iterators/type_container.h"
+
+namespace mirr
 {
 
     type registry::resolve(const std::string &name) noexcept
@@ -18,7 +18,7 @@ namespace reflection
 
     type_container registry::resolve() noexcept
     {
-        return type_container();
+        return {};
     }
 
     bool registry::valid(uint32_t id)
@@ -42,4 +42,4 @@ namespace reflection
         return std::numeric_limits<uint32_t>::max();
     }
 
-} // reflection
+} // mirr

@@ -9,7 +9,7 @@
 #include "type_traits.h"
 #include "type_flags.h"
 
-namespace reflection
+namespace mirr
 {
     // Forward declarations
     struct type_info;
@@ -18,6 +18,7 @@ namespace reflection
     struct ctor_info;
 
     class any;
+
     class handle;
 
     struct data_info
@@ -28,6 +29,7 @@ namespace reflection
         id_type type_id;
 
         bool (*set)(handle, any);
+
         any (*get)(handle);
 
         data_flags flags;
@@ -44,6 +46,7 @@ namespace reflection
         id_type return_type;
 
         id_type (*arg)(const size_type) noexcept;
+
         any (*invoke)(handle, any *const);
 
 
@@ -53,16 +56,23 @@ namespace reflection
 
     struct ctor_info
     {
-        uint32_t id;
-        uint32_t type_id;
+        using id_type = uint32_t;
+        using size_type = std::size_t;
+
+        id_type id;
+        id_type type_id;
 
         size_t arity;
-        std::vector<uint32_t> args;
+
+        id_type (*arg)(const size_type) noexcept;
+
+        any (*invoke)(any *const);
     };
 
     struct conv_info
     {
         uint32_t id;
+
         any (*helper_func)(any);
     };
 
@@ -79,21 +89,33 @@ namespace reflection
         std::unordered_map<uint32_t, data_info> data;
         std::unordered_map<uint32_t, func_info> functions;
         std::unordered_map<uint32_t, conv_info> conversions;
-        std::vector<ctor_info> constructors;
+        std::unordered_map<uint32_t, ctor_info> constructors;
         std::vector<uint32_t> bases;
     };
 
     class type_data
     {
         friend class type;
+
         friend class type_container;
+
         friend class data;
+
         friend class data_container;
+
         friend class function;
+
         friend class function_container;
+
         friend class registry;
+
         friend class any;
+
         friend class argument_container;
+
+        friend class constructor;
+
+        friend class constructor_container;
 
         template<typename T>
         friend
@@ -136,7 +158,7 @@ namespace reflection
             {
                 flags |= type_flags::is_pointer;
             }
-            if (internal::is_pointer_like_v < T >)
+            if (internal::is_pointer_like_v<T>)
             {
                 flags |= type_flags::is_pointer_like;
             }

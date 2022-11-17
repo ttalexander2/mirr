@@ -1,35 +1,33 @@
 cmake_minimum_required(VERSION 3.23)
-project(reflection
+project(mirr
         VERSION 0.1.0
-        DESCRIPTION "Static reflection library built for the chroma engine.")
+        DESCRIPTION "Minimally invasive runtime reflection library."
+        LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(${PROJECT_NAME} STATIC)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(CMAKE_CXX_EXTENSIONS OFF)
 
-file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
-file(GLOB_RECURSE INCLUDE_FILES include/*.h)
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+    include(CTest)
 
-target_sources(${PROJECT_NAME}
-        PRIVATE
-        ${SOURCE_FILES})
+    find_package(Doxygen)
+    if(Doxygen_FOUND)
+        add_subdirectory(docs)
+    else()
+        message(STATUS "Doxygen not found, not building docs")
+    endif()
+endif()
 
-target_include_directories(${PROJECT_NAME}
-        PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-        )
+include(FetchContent)
 
-foreach (header ${public_headers})
-    file(RELATIVE_PATH header_file_path "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}" "${header}")
-    get_filename_component(header_directory_path "${header_file_path}" DIRECTORY)
-    install(
-            FILES ${header}
-            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${header_directory_path}"
-    )
-endforeach ()
+add_subdirectory(src)
 
-add_executable(example example/example.cpp ${INCLUDE_FILES} ${SOURCE_FILES})
+add_subdirectory(example)
+
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
+        AND BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
