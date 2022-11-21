@@ -116,7 +116,7 @@ namespace mirr
 
         [[nodiscard]] mirr::function_container func() const;
 
-        [[nodiscard]] mirr::constructor_container ctor() const;
+        //[[nodiscard]] mirr::constructor_container ctor() const;
 
 
         [[nodiscard]] bool is_convertible(uint32_t type_id) const;

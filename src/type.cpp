@@ -168,9 +168,4 @@ namespace mirr
     {
         return mirr::function_container(_id);
     }
-
-    [[nodiscard]] mirr::constructor_container type::ctor() const
-    {
-        return mirr::constructor_container(_id);
-    }
 }

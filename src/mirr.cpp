@@ -1,6 +1,6 @@
 #include "mirr/mirr.h"
 
-namespace Chroma::Reflection
+namespace mirr
 {
 
 }

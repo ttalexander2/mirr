@@ -1,7 +1,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "mirr/mirr.h"
+#include <mirr/mirr.h>
 
 
 struct test_type
