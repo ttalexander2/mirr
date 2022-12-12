@@ -168,4 +168,13 @@ namespace mirr
     {
         return mirr::function_container(_id);
     }
+
+    any type::user_data(const std::string& key) const
+    {
+        uint32_t hash = basic_hash<uint32_t>(key);
+        if (!valid() || type_data::instance().types[_id].user_data.find(hash) == type_data::instance().types[_id].user_data.end())
+            return any{};
+
+        return any{type_data::instance().types[_id].user_data[hash]};
+    }
 }

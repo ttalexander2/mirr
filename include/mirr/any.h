@@ -7,12 +7,21 @@
 #include "type_hash.h"
 #include "type_traits.h"
 
+
+
 namespace mirr
 {
+
+    // Forward declarations
+    class any;
+    class handle;
 
 
     namespace internal
     {
+        /**
+         * @brief Internal operations to perform using the vtable.
+         */
         enum class any_operation : uint8_t
         {
             copy,
@@ -24,6 +33,9 @@ namespace mirr
             get
         };
 
+        /**
+         * @brief Policy for any objects.
+         */
         enum class any_policy : uint8_t
         {
             owner,
@@ -33,11 +45,9 @@ namespace mirr
     }
 
 
-    class any;
-
-    class handle;
-
-
+    /**
+     * @brief Opaque container for storing data of any type.
+     */
     class any
     {
         friend class handle;
@@ -219,7 +229,9 @@ namespace mirr
             auto id = internal::type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
             if (id == type_info._id)
             {
-                return static_cast<Type *>(this->data(id));
+                Type* data = static_cast<Type *>(this->data(id));
+                if (data != nullptr)
+                    return std::move(data);
             }
             return nullptr;
         }

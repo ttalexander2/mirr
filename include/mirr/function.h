@@ -8,6 +8,7 @@ namespace mirr
 {
 
     class type_data;
+
     class registry;
 
     struct func_info;
@@ -21,10 +22,15 @@ namespace mirr
     class function
     {
         friend class type_data;
+
         friend class registry;
+
         friend class any;
+
         friend class handle;
+
         friend class type;
+
         friend class function_container;
 
         template<typename T>

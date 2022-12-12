@@ -12,10 +12,15 @@ namespace mirr
     class constructor_container
     {
         friend class type_data;
+
         friend class registry;
+
         friend class any;
+
         friend class handle;
+
         friend class type;
+
         friend class constructor;
 
         template<typename T>
@@ -35,10 +40,15 @@ namespace mirr
 
         public:
             iterator &operator++();
+
             iterator operator++(int);
+
             friend bool operator==(const iterator &a, const iterator &b);
+
             friend bool operator!=(const iterator &a, const iterator &b);
+
             reference operator*() const;
+
             pointer operator->() const;
 
         private:

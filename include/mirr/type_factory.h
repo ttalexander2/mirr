@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <string>
+#include <utility>
 #include <vector>
 #include <iostream>
 #include <functional>
@@ -24,6 +25,10 @@ namespace mirr
         template<typename T>
         friend
         class type_factory;
+
+        template<typename T>
+        friend
+        class type_initializer;
 
         using id_hash = basic_hash<uint32_t>;
 
@@ -266,15 +271,28 @@ namespace mirr
             return *this;
         }
 
-    private:
-        explicit type_factory(const std::string &name) : _type(internal::type_hash<Type>::value())
+        type_factory &user_data(const std::string& key, any value)
         {
-            register_type(name);
+            uint32_t hash = basic_hash<uint32_t>::hash(key);
+
+            type_info *info = _type.info();
+            if (info != nullptr)
+            {
+                info->user_data[hash] = std::move(value);
+            }
+
+            return *this;
         }
 
         explicit type_factory() : _type(internal::type_hash<Type>::value())
         {
             register_type();
+        }
+
+    private:
+        explicit type_factory(const std::string &name) : _type(internal::type_hash<Type>::value())
+        {
+            register_type(name);
         }
 
         static void register_type(const std::string &name)

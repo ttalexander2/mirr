@@ -8,12 +8,14 @@ namespace mirr
 {
 
     class type_data;
+
     class registry;
 
     struct ctor_info;
     struct type_info;
 
     class constructor_container;
+
     class argument_container;
 
     template<typename T>
@@ -22,11 +24,17 @@ namespace mirr
     class constructor
     {
         friend class type_data;
+
         friend class registry;
+
         friend class any;
+
         friend class handle;
+
         friend class type;
+
         friend class argument_container;
+
         friend class constructor_container;
 
         template<typename T>

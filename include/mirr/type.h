@@ -118,6 +118,9 @@ namespace mirr
 
         //[[nodiscard]] mirr::constructor_container ctor() const;
 
+        [[nodiscard]] any user_data(const std::string& key) const;
+
+
 
         [[nodiscard]] bool is_convertible(uint32_t type_id) const;
 

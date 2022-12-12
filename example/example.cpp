@@ -6,10 +6,12 @@
 
 struct test_type
 {
+    REFLECT(test_type);
+
     test_type(const std::string &name, int val) : value(val), name(name), other(0)
     {
-
     }
+
 
     int value;
     std::string name;
@@ -30,6 +32,18 @@ struct test_type
         std::cout << a << "\n";
         std::cout << b << "\n";
     }
+
+    static inline type_factory register_type()
+    {
+        std::cout << "called register_type\n";
+        return mirr::register_type<test_type>("test_type")
+                .ctor<const std::string &, int>()
+                .conversion<int>()
+                .data<&test_type::name>("name")
+                .data<&test_type::get_value, &test_type::set_value>("value")
+                .data<&test_type::other>("other")
+                .user_data("something", 4);
+    }
 };
 
 test_type create_test_type(char f)
@@ -40,15 +54,17 @@ test_type create_test_type(char f)
 
 int main()
 {
+    std::cout << "main called\n";
+
     mirr::register_type<void>("void");
-    mirr::register_type<uint8_t>("uint8");
-    mirr::register_type<uint16_t>("uint16");
-    mirr::register_type<uint32_t>("uint32");
-    mirr::register_type<uint64_t>("uint64");
-    mirr::register_type<int8_t>("int8");
-    mirr::register_type<int16_t>("int16");
-    mirr::register_type<int32_t>("int32");
-    mirr::register_type<int64_t>("int64");
+    mirr::register_type<uint8_t>("uint8_t");
+    mirr::register_type<uint16_t>("uint16_t");
+    mirr::register_type<uint32_t>("uint32_t");
+    mirr::register_type<uint64_t>("uint64_t");
+    mirr::register_type<int8_t>("int8_t");
+    mirr::register_type<int16_t>("int16_t");
+    mirr::register_type<int32_t>("int32_t");
+    mirr::register_type<int64_t>("int64_t");
     mirr::register_type<float>("float");
     mirr::register_type<double>("double");
     mirr::register_type<char>("char");
@@ -57,15 +73,6 @@ int main()
             .conversion<const char *, &std::string::c_str>();
     mirr::register_type<const char *>("cstring")
             .conversion<std::string>();
-
-    mirr::register_type<test_type>("test_type")
-            .conversion<int>()
-            .ctor<const std::string &, int>()
-            .ctor<&create_test_type>()
-            .data<&test_type::get_value, &test_type::set_value>("value")
-            .data<&test_type::name>("name")
-            .data<&test_type::other>("other")
-            .function<&test_type::foo>("foo");
 
 
     auto type = mirr::resolve("test_type");
@@ -86,8 +93,11 @@ int main()
 
     }
 
+    auto something = type.user_data("something").cast<int>();
 
-    test_type instance("bill", 42);
+    std::cout << "user_data(something): " << something << "\n";
+
+    test_type instance("bob", 42);
 
     auto d = type.data("value");
     std::cout << d.type().id() << "\n";

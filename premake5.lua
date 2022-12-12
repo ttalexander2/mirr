@@ -1,76 +1,71 @@
 workspace "mirr"
-    architecture "x64"
-    startproject "example"
-    configurations {
-            "Debug",
-            "Release"
-     }
-    flags {
-    	"MultiProcessorCompile"
-    }
+architecture "x64"
+startproject "example"
+configurations {
+    "Debug",
+    "Release"
+}
+flags {
+    "MultiProcessorCompile"
+}
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 project "mirr"
-    location "mirr"
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++17"
-    staticruntime "off"
+location "."
+kind "StaticLib"
+language "C++"
+cppdialect "C++17"
+staticruntime "off"
 
-    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("obj/" .. outputdir .. "/%{prj.name}")
+targetdir("bin/" .. outputdir .. "/%{prj.name}")
+objdir("obj/" .. outputdir .. "/%{prj.name}")
 
-    files
-    {
-        "src/**.h",
-        "src/**.hpp",
-        "src/**.inl",
-        "src/**.cpp",
-    }
+files {
+    "src/**.h",
+    "src/**.hpp",
+    "src/**.inl",
+    "src/**.cpp",
+}
 
-    includedirs
-    {
-        "include"
-    }
+includedirs {
+    "include"
+}
 
-    filter "configurations:Debug"
-           runtime "Debug"
-           symbols "on"
+filter "configurations:Debug"
+runtime "Debug"
+symbols "on"
 
-    filter "configurations:Release"
-           runtime "Release"
-           optimize "on"
+filter "configurations:Release"
+runtime "Release"
+optimize "on"
 
 project "example"
-    location "example"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++17"
-    staticruntime "off"
+location "example"
+kind "ConsoleApp"
+language "C++"
+cppdialect "C++17"
+staticruntime "off"
 
-    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("obj/" .. outputdir .. "/%{prj.name}")
+targetdir("bin/" .. outputdir .. "/%{prj.name}")
+objdir("obj/" .. outputdir .. "/%{prj.name}")
 
-    links
-    {
-        "mirr"
-    }
+links {
+    "mirr"
+}
 
-    files
-    {
-        "example/example.cpp"
-    }
+files {
+    "example/example.cpp"
+}
 
-    includedirs
-    {
-        "include"
-    }
+includedirs {
+    "include"
+}
 
-    filter "configurations:Debug"
-        runtime "Debug"
-        symbols "on"
+filter "configurations:Debug"
+runtime "Debug"
+symbols "on"
 
-    filter "configurations:Release"
-        runtime "Release"
-        optimize "on"
+filter "configurations:Release"
+runtime "Release"
+optimize "on"

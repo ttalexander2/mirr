@@ -4,9 +4,9 @@ project(mirr
         DESCRIPTION "Minimally invasive runtime reflection library."
         LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CMAKE_CXX_EXTENSIONS OFF)
 
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -14,12 +14,12 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
 
     find_package(Doxygen)
-    if(Doxygen_FOUND)
+    if (Doxygen_FOUND)
         add_subdirectory(docs)
-    else()
+    else ()
         message(STATUS "Doxygen not found, not building docs")
-    endif()
-endif()
+    endif ()
+endif ()
 
 include(FetchContent)
 
@@ -27,7 +27,7 @@ add_subdirectory(src)
 
 add_subdirectory(example)
 
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
+if ((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
         AND BUILD_TESTING)
     add_subdirectory(tests)
-endif()
+endif ()

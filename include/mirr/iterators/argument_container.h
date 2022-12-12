@@ -13,10 +13,15 @@ namespace mirr
     class argument_container
     {
         friend class type_data;
+
         friend class registry;
+
         friend class any;
+
         friend class handle;
+
         friend class type;
+
         friend class function;
 
         template<typename T>

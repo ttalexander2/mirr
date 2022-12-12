@@ -17,6 +17,12 @@ namespace mirr
         using id_hash = basic_hash<uint32_t>;
 
         template<typename T>
+        static type_factory<T> register_type()
+        {
+            return type_factory<T>();
+        }
+
+        template<typename T>
         static type_factory<T> register_type(const std::string &name)
         {
             return type_factory<T>(name);

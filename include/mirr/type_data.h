@@ -8,6 +8,7 @@
 #include "basic_hash.h"
 #include "type_traits.h"
 #include "type_flags.h"
+#include "any.h"
 
 namespace mirr
 {
@@ -90,6 +91,7 @@ namespace mirr
         std::unordered_map<uint32_t, func_info> functions;
         std::unordered_map<uint32_t, conv_info> conversions;
         std::unordered_map<uint32_t, ctor_info> constructors;
+        std::unordered_map<uint32_t, any> user_data;
         std::vector<uint32_t> bases;
     };
 

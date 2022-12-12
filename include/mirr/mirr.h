@@ -7,6 +7,7 @@
 #include "mirr/data.h"
 #include "mirr/function.h"
 #include "mirr/registry.h"
+#include "mirr/initializer.h"
 #include "mirr/iterators/data_container.h"
 #include "mirr/iterators/function_container.h"
 #include "mirr/iterators/type_container.h"
@@ -14,6 +15,7 @@
 
 namespace mirr
 {
+
     /**
      * @brief Registers a type to the mirr system.
      * @tparam T Type to register.
@@ -118,4 +120,20 @@ namespace mirr
         return registry::resolve(name).id();
     }
 
+#ifdef MIRR_USE_EXPLICIT_MACROS
+#ifndef MIRR_REFLECT
+#define MIRR_REFLECT(_TYPE_NAME_) \
+        static mirr::type_factory<_TYPE_NAME_> register_type(); \
+        static inline mirr::type_initializer<_TYPE_NAME_> _reflection_type_initializer{};
+#endif
+#else
+#ifndef REFLECT
+#define REFLECT(_TYPE_NAME_) \
+        using type_factory = mirr::type_factory<_TYPE_NAME_>;  \
+        static inline mirr::type_initializer<_TYPE_NAME_> _reflection_type_initializer{};
+#endif
+#endif
+
+
 }
+

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <functional>
 #include "any.h"
 
 namespace mirr::internal
@@ -455,6 +456,21 @@ namespace mirr::internal
         return internal::construct_with_function<Type>(Func, args,
                                                        std::make_index_sequence<function_helper_t<Type, std::remove_reference_t<decltype(Func)>>::args_type::size>{});
     }
+
+    template<size_t N>
+    struct string_literal
+    {
+        constexpr string_literal() = default;
+
+        constexpr string_literal(const char (&str)[N])
+        {
+            std::copy_n(str, N, value);
+        }
+
+        static constexpr size_t size = N;
+
+        char value[N]{};
+    };
 
 }
 
