@@ -2,6 +2,9 @@
 
 namespace mirr
 {
+    /**
+     * @brief Flags for a type.
+     */
     enum class type_flags : uint16_t
     {
         none = 0,
@@ -17,6 +20,9 @@ namespace mirr
         is_template_specialization = 1 << 9
     };
 
+    /**
+     * @brief Flags for a type's data.
+     */
     enum class data_flags : uint8_t
     {
         none = 0,
@@ -24,6 +30,8 @@ namespace mirr
         is_serialized = 1 << 1,
         is_static = 1 << 2
     };
+
+    // Helper Operators:
 
     inline type_flags operator|(type_flags a, type_flags b)
     {

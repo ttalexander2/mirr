@@ -177,4 +177,14 @@ namespace mirr
 
         return any{type_data::instance().types[_id].user_data[hash]};
     }
+
+    mirr::constructor type::constructor(uint32_t id) const
+    {
+        return {id, _id};
+    }
+
+    mirr::constructor_container type::constructor() const
+    {
+        return mirr::constructor_container(_id);
+    }
 }

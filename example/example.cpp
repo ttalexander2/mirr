@@ -96,16 +96,16 @@ int main()
     std::cout << "is_class: " << std::boolalpha << type.is_class() << "\n";
     std::cout << "is_associative_container: " << std::boolalpha << type.is_associative_container() << "\n";
 
-    for (auto &[id, ctor]: type.info()->constructors)
-    {
-        std::cout << "Constructor: " << mirr::type_name_from_id(ctor.type_id) << "\nargs: ";
-        for (int i = 0; i < ctor.arity; i++)
-        {
-            std::cout << mirr::type_name_from_id(ctor.arg(i)) << ((i == ctor.arity - 1) ? "" : ", ");
-        }
-        std::cout << "\n";
+   //for (auto &[id, ctor]: type.constructors())
+   //{
+   //    std::cout << "Constructor: " << mirr::type_name_from_id(ctor.type_id) << "\nargs: ";
+   //    for (int i = 0; i < ctor.arity; i++)
+   //    {
+   //        std::cout << mirr::type_name_from_id(ctor.arg(i)) << ((i == ctor.arity - 1) ? "" : ", ");
+   //    }
+   //    std::cout << "\n";
 
-    }
+   //}
 
     auto something = type.user_data("something").cast<int>();
 

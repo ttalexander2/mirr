@@ -15,27 +15,33 @@
 namespace mirr
 {
 
+    /**
+     * @brief Type factory used for registering metadata for a type.
+     * This class uses the named parameter idiom to make type registration easy to use and read.
+     * @tparam Type - Type associated with the type factory.
+     */
     template<typename Type>
     class type_factory
     {
         friend class type_data;
-
         friend class registry;
-
         template<typename T>
-        friend
-        class type_factory;
-
+        friend class type_factory;
         template<typename T>
-        friend
-        class type_initializer;
+        friend class type_initializer;
 
         using id_hash = basic_hash<uint32_t>;
 
     public:
+        /**
+         * @brief Registers another type as a base class of this type.
+         * @tparam B - Base type.
+         * @return Returns a reference to this type factory.
+         */
         template<typename B>
         type_factory<Type> &base() noexcept
         {
+            // Check whether the type is actually a base class.
             static_assert(!std::is_same_v<B, Type> && std::is_base_of_v<B, Type>, "Invalid base type.");
 
             type_info *info = get_type_info<B>();
@@ -46,22 +52,32 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Registers this type as convertible to another type.
+         * @tparam To - Type which this type is convertible to.
+         * @return Returns a reference to this type factory.
+         */
         template<typename To>
         type_factory<Type> &conversion() noexcept
         {
             using From_ = std::remove_cv_t<std::remove_reference_t<Type>>;
             using To_ = std::remove_cv_t<std::remove_reference_t<To>>;
 
+            // Check whether the type is *actually* convertible.
             static_assert(internal::is_convertible_v<From_, To_>,
                           "Type is not convertable.");
 
+
             type_info *to_info = get_type_info<To>();
+
+            // Register the type if it has not yet been registered (this is unlikely)
             if (to_info == nullptr)
             {
                 type_factory<To>::register_type();
                 to_info = get_type_info<To>();
             }
 
+            // Register the conversion
             if (to_info != nullptr)
             {
                 conv_info info{};
@@ -77,6 +93,12 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Registers this type as convertible to another type with the provided conversion function.
+         * @tparam To - Type which this type is convertible to.
+         * @tparam Func - Conversion function. Function should take an instance of this type, and return an instance of the other type (To).
+         * @return Returns a reference to this type factory.
+         */
         template<typename To, auto Func>
         type_factory<Type> &conversion() noexcept
         {
@@ -87,6 +109,7 @@ namespace mirr
                 to_info = get_type_info<To>();
             }
 
+            // Registers the conversion function
             if (to_info != nullptr)
             {
                 conv_info info{};
@@ -102,9 +125,15 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Registers a constructor with the given arguments.
+         * @tparam Args - Argument types for the constructor.
+         * @return Returns a reference to this type factory.
+         */
         template<typename... Args>
         type_factory<Type> &ctor() noexcept
         {
+            // Checks to make sure this type is constructible with the given arguments.
             static_assert(std::is_constructible_v<Type, Args...>,
                           "Type cannot be constructed with the given arguments.");
 
@@ -112,11 +141,11 @@ namespace mirr
             if (info != nullptr)
             {
                 ctor_info ctor{};
-                // Since we don't require an identifier for constructor, we'll just concat the typeid names for now...
+                // Since we don't require an identifier for constructor, we'll just use a counter.
                 ctor.id = internal::constructor_counter::next();
                 ctor.type_id = _type.id();
                 ctor.arity = sizeof...(Args);
-                // Register the types
+                // Register the argument types (just in case they don't exist in the system)
                 (type_factory<Args>::register_type(), ...);
 
 
@@ -129,6 +158,11 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Registers a constructor function for this type.
+         * @tparam Func - Function which produces an instance of this type.
+         * @return Returns a reference to this type factory.
+         */
         template<auto Func>
         type_factory<Type> &ctor() noexcept
         {
@@ -155,6 +189,13 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Registers a data member for this type.
+         * @tparam Data - Pointer to the data object.
+         * @param name - User provided identifier for the type.
+         * @param serialize - Whether the data member should be serialized.
+         * @return Returns a reference to this type factory.
+         */
         template<auto Data>
         type_factory &data(const std::string &name, bool serialize = true)
         {
@@ -172,6 +213,7 @@ namespace mirr
                     data.flags |= data_flags::is_serialized;
                 }
 
+                // Checks if the data is a member of the type.
                 if constexpr (std::is_member_object_pointer_v<decltype(Data)>)
                 {
                     using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Data), Type &>>;
@@ -184,7 +226,8 @@ namespace mirr
                     }
                     data.get = &internal::get_function<Type, Data>;
                     data.set = &internal::set_function<Type, Data>;
-                } else
+                }
+                else
                 {
                     using data_type = std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>;
 
@@ -205,6 +248,14 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Registers a data member of this type using getter and setter functions.
+         * @tparam Getter - Getter function, should return the data member.
+         * @tparam Setter - Setter function, sets the data member. This function can be nullptr_t if the data is read-only.
+         * @param name - Name of the data member.
+         * @param serialize - Whether the data member should be serialized.
+         * @return Returns a reference to this type factory.
+         */
         template<auto Getter, auto Setter>
         type_factory &data(const std::string &name, bool serialize = true)
         {
@@ -223,6 +274,7 @@ namespace mirr
                     data.flags |= data_flags::is_serialized;
                 }
 
+                // If there is no setter function (i.e data is readonly)
                 if constexpr (std::is_same_v<decltype(Setter), std::nullptr_t>)
                 {
                     using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Getter), Type &>>;
@@ -232,7 +284,8 @@ namespace mirr
                     data.get = &internal::get_function<Type, Getter>;
                     data.set = &internal::set_function<Type, Setter>;
                     data.flags |= data_flags::is_const;
-                } else
+                }
+                else
                 {
                     using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Getter), Type &>>;
 
@@ -249,6 +302,12 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Registers a function to this type.
+         * @tparam Func - Pointer to the function
+         * @param name - User provided identifier for the function.
+         * @return Returns a reference to this type factory.
+         */
         template<auto Func>
         type_factory &function(const std::string &name)
         {
@@ -271,6 +330,12 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Associates key/value user data to this type.
+         * @param key - Key of the data
+         * @param value - Value of the data
+         * @return Returns a reference to the type factory.
+         */
         type_factory &user_data(const std::string& key, any value)
         {
             uint32_t hash = basic_hash<uint32_t>::hash(key);
@@ -284,22 +349,34 @@ namespace mirr
             return *this;
         }
 
+    private:
+        /**
+         * @brief Registers the type anonymously and creates a type factory.
+         */
         explicit type_factory() : _type(internal::type_hash<Type>::value())
         {
             register_type();
         }
 
-    private:
+        /**
+         * @brief Registers the type explicitly under the given identifier.
+         * @param name - Identifier for the type.
+         */
         explicit type_factory(const std::string &name) : _type(internal::type_hash<Type>::value())
         {
             register_type(name);
         }
 
+        /**
+         * @brief Registers a type with the reflection system.
+         * @param name
+         */
         static void register_type(const std::string &name)
         {
             auto id = internal::type_hash<Type>::value();
             auto hash = basic_hash<uint32_t>::hash(name);
 
+            // If the type does not yet exist in the reflection system.
             if (type_data::instance().types.find(id) == type_data::instance().types.end())
             {
                 type_info info;
@@ -310,7 +387,8 @@ namespace mirr
 
                 type_data::instance().type_aliases[hash] = id;
                 type_data::instance().types[id] = info;
-            } else
+            }
+            else // The type already exists, just add the alias.
             {
                 type_info *info = get_type_info<Type>();
                 if (info != nullptr)
@@ -321,11 +399,14 @@ namespace mirr
             }
         }
 
+        /**
+         * @brief Registers the type anonymously in the reflection system.
+         */
         static void register_type()
         {
             auto id = internal::type_hash<Type>::value();
 
-
+            // Only register if the type doesn't already exist.
             if (type_data::instance().types.find(id) == type_data::instance().types.end())
             {
                 type_info info;
@@ -338,6 +419,10 @@ namespace mirr
             }
         }
 
+        /**
+         * @brief Helper function to get the underlying type where applicable.
+         * @return The ID of the underlying type, if valid. Returns 0xFFFFFFFF if invalid.
+         */
         static uint32_t get_underlying_type()
         {
             if constexpr (std::is_pointer_v<Type> || internal::is_pointer_like_v<Type>)
@@ -349,6 +434,11 @@ namespace mirr
             return internal::type_hash<void>::value();
         }
 
+        /**
+         * @brief Helper function to get the type info for this type if valid.
+         * @tparam T
+         * @return
+         */
         template<typename T>
         static type_info *get_type_info()
         {
@@ -362,6 +452,6 @@ namespace mirr
 
         }
 
-        type _type;
+        type _type; // Type info for this type.
     };
 }

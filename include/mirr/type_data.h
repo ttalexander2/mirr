@@ -10,6 +10,16 @@
 #include "type_flags.h"
 #include "any.h"
 
+// Note: For the current sake of simplicity, currently type data structs are stored
+// within std::unordered_map (s), however I would like to make the storage for this
+// type data more flexible. It would be best to provide an optional interface to the
+// user to allow for custom storage and allocation of this data.
+
+// Additionally, it would be nice in the future to optionally allow the user
+// to store and provide a type_data object. This way, the user would be able to
+// manage the context of the reflection system.
+
+
 namespace mirr
 {
     // Forward declarations
@@ -17,11 +27,12 @@ namespace mirr
     struct data_info;
     struct func_info;
     struct ctor_info;
-
     class any;
-
     class handle;
 
+    /**
+     * @brief Struct storing meta info for a single piece of type data.
+     */
     struct data_info
     {
         using id_type = uint32_t;
@@ -36,6 +47,9 @@ namespace mirr
         data_flags flags;
     };
 
+    /**
+     * @brief Struct storing meta info for a single type function.
+     */
     struct func_info
     {
         using id_type = uint32_t;
@@ -55,6 +69,9 @@ namespace mirr
         bool is_static;
     };
 
+    /**
+     * @brief Struct storing meta info for a single type constructor.
+     */
     struct ctor_info
     {
         using id_type = uint32_t;
@@ -70,6 +87,9 @@ namespace mirr
         any (*invoke)(any *const);
     };
 
+    /**
+     * @brief Struct storing meta info for a single type conversion.
+     */
     struct conv_info
     {
         uint32_t id;
@@ -77,7 +97,9 @@ namespace mirr
         any (*helper_func)(any);
     };
 
-    // Holds type_data information for a type.
+    /**
+     * @brief Struct storing meta info for a single type.
+     */
     struct type_info
     {
         std::string name;
@@ -95,42 +117,42 @@ namespace mirr
         std::vector<uint32_t> bases;
     };
 
+    /**
+     * @brief Monolithic class containing all data stored in the reflection system.
+     */
     class type_data
     {
         friend class type;
-
         friend class type_container;
-
         friend class data;
-
         friend class data_container;
-
         friend class function;
-
         friend class function_container;
-
         friend class registry;
-
         friend class any;
-
         friend class argument_container;
-
         friend class constructor;
-
         friend class constructor_container;
-
         template<typename T>
-        friend
-        class type_factory;
+        friend class type_factory;
 
         using id_hash = basic_hash<uint32_t>;
 
+        /**
+         * @brief Gets the single instance of the type_data system.
+         * @return
+         */
         static type_data &instance()
         {
             static type_data instance;
             return instance;
         }
 
+        /**
+         * @brief Gets the type flags for a provided type.
+         * @tparam T - Type to check.
+         * @return type_flags enum representing all flags for a type.
+         */
         template<typename T>
         static type_flags get_flags()
         {
@@ -180,12 +202,19 @@ namespace mirr
             return flags;
         }
 
-        // Map of application type info by type hash
+        /**
+         * @brief Map of application type info by type hash
+         */
         std::unordered_map<uint32_t, type_info> types;
 
-        // Key is name hash, value is type hash
+        /**
+         * @brief Stores name to ID aliases. Key is name hash, value is type hash
+         */
         std::unordered_map<uint32_t, uint32_t> type_aliases;
 
+        /**
+         * @brief Default constructor.
+         */
         type_data() = default;
 
     };
