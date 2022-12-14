@@ -17,9 +17,9 @@ namespace mirr
 {
 
     /**
-     * @brief Registers a type to the mirr system.
-     * @tparam T Type to register.
-     * @param name Identifier for the type.
+     * @brief Registers a type to the reflection system.
+     * @tparam - T Type to register.
+     * @param - name Identifier for the type.
      * @return Type factory object, used as named parameter idiom, to declare information about the type.
      */
     template<typename T>
@@ -29,9 +29,9 @@ namespace mirr
     }
 
     /**
-     * @brief Registers a template specialization to the mirr system.
-     * @tparam T Template specialization to register.
-     * @param name Identifier for the type.
+     * @brief Registers a template specialization to the reflection system.
+     * @tparam -  T Template specialization to register.
+     * @param - name Identifier for the type.
      * @return Type factory object to, used to declare information about the type.
      */
     template<template<typename> typename T>
@@ -42,7 +42,7 @@ namespace mirr
 
     /**
      * @brief Retrieves type information for a given identifier.
-     * @param name The type's existing identifier.
+     * @param - name The type's existing identifier.
      * @return Object containing information about the type.
      */
     inline type resolve(const std::string &name) noexcept
@@ -52,7 +52,7 @@ namespace mirr
 
     /**
      * @brief Retrieves type information for a given id.
-     * @param name The type's id.
+     * @param - name The type's id.
      * @return Object containing information about the type.
      */
     inline type resolve(uint32_t id) noexcept
@@ -61,7 +61,7 @@ namespace mirr
     }
 
     /**
-     * @brief Retrieves a list of all the types registered in the mirr system.
+     * @brief Retrieves a list of all the types registered in the reflection system.
      * @return Iterable container with all the registered types.
      */
     inline type_container resolve() noexcept
@@ -71,7 +71,7 @@ namespace mirr
 
     /**
      * @brief Retrieves type information for the given type.
-     * @tparam T Type to resolve.
+     * @tparam - T Type to resolve.
      * @return Object containing information about the type.
      */
     template<typename T>
@@ -82,7 +82,7 @@ namespace mirr
 
     /**
      * @brief Checks whether a given identifier has been registered for a type.
-     * @param name Identifier to validate.
+     * @param - name Identifier to validate.
      * @return Whether the identifier is valid (there exists a type registered with the given name).
      */
     inline bool valid(const std::string &name)
@@ -92,7 +92,7 @@ namespace mirr
 
     /**
      * @brief Checks whether a type with the given ID exists in the registry.
-     * @param id ID to validate.
+     * @param - id ID to validate.
      * @return Whether the ID is valid (there exists a type registered with the given ID).
      */
     inline bool valid(uint32_t id)
@@ -102,7 +102,7 @@ namespace mirr
 
     /**
      * @brief Gets the name of a type from the given id.
-     * @param id Assigned id to for the type.
+     * @param - id Assigned id to for the type.
      * @return Assigned name to the type.
      */
     inline std::string type_name_from_id(uint32_t id)
@@ -112,7 +112,7 @@ namespace mirr
 
     /**
  * @brief Gets the name of a type from the given id.
- * @param id Assigned id to for the type.
+ * @param - id Assigned id to for the type.
  * @return Assigned name to the type.
  */
     inline uint32_t type_id_from_name(const std::string &name)

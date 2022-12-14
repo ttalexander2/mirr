@@ -10,57 +10,34 @@ namespace mirr
 
     // Forward declarations
     class type_data;
-
     class func_data;
-
     class registry;
-
     class any;
-
     class handle;
-
     struct type_info;
-
     class data;
-
     class function;
-
     class data_container;
-
     class function_container;
-
     class constructor_container;
-
     template<typename T>
     class type_factory;
 
     class type
     {
         friend class type_data;
-
         friend class func_data;
-
         friend class registry;
-
         friend class any;
-
         friend class handle;
-
         friend class data;
-
         friend class function;
-
         friend class type_container;
-
         friend class argument_container;
-
         friend class constructor;
-
         friend class constructor_container;
-
         template<typename T>
-        friend
-        class type_factory;
+        friend class type_factory;
 
     public:
         type();

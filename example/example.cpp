@@ -7,11 +7,18 @@
 struct test_type
 {
     REFLECT(test_type);
+private:
+    template <typename Data>
+    static inline type_factory register_data()
+    {
+
+    }
+public:
 
     test_type(const std::string &name, int val) : value(val), name(name), other(0)
     {
-    }
 
+    }
 
     int value;
     std::string name;
@@ -33,6 +40,9 @@ struct test_type
         std::cout << b << "\n";
     }
 
+    void some_func(){}
+    void some_func(int arg){}
+
     static inline type_factory register_type()
     {
         std::cout << "called register_type\n";
@@ -42,9 +52,15 @@ struct test_type
                 .data<&test_type::name>("name")
                 .data<&test_type::get_value, &test_type::set_value>("value")
                 .data<&test_type::other>("other")
+                .function<static_cast<void (test_type::*)(int)>(&test_type::some_func)>("some_func1")
                 .user_data("something", 4);
     }
 };
+
+void foo()
+{
+    auto val = test_type("aahh", 0);
+}
 
 test_type create_test_type(char f)
 {
@@ -54,8 +70,6 @@ test_type create_test_type(char f)
 
 int main()
 {
-    std::cout << "main called\n";
-
     mirr::register_type<void>("void");
     mirr::register_type<uint8_t>("uint8_t");
     mirr::register_type<uint16_t>("uint16_t");

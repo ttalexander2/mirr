@@ -48,8 +48,11 @@ namespace mirr
 
     mirr::type constructor::args(size_t index) const
     {
-        if (valid())
+        if (valid() && index < arity())
+        {
             return mirr::type(type_data::instance().types[_type_id].constructors[_id].arg(index));
+        }
+
         return registry::resolve<void>();
     }
 

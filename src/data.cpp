@@ -80,5 +80,12 @@ namespace mirr
         return _id == rhs._id && _type_id == rhs._type_id;
     }
 
+    mirr::type data::data_type() const
+    {
+        if (valid())
+            return registry::resolve(type_data::instance().types[_type_id].data[_id].type_id);
+        return registry::resolve<void>();
+    }
+
 
 }

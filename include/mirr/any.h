@@ -8,7 +8,6 @@
 #include "type_traits.h"
 
 
-
 namespace mirr
 {
 
@@ -52,7 +51,7 @@ namespace mirr
     {
         friend class handle;
 
-
+        // Defines length and alignment for in situ storage.
         static constexpr std::size_t Len = sizeof(double[2]);
         static constexpr std::size_t Align = alignof(std::aligned_storage_t<Len + !Len>);
 
@@ -66,6 +65,9 @@ namespace mirr
 
     public:
 
+        /**
+         * @brief Constructs an empty any object.
+         */
         any() noexcept // NOLINT(cppcoreguidelines-pro-type-member-init)
                 : instance{},
                   type_info{internal::type_hash<void>::value()},
@@ -73,6 +75,11 @@ namespace mirr
                   vtable{}
         {}
 
+        /**
+         * @brief Constructs an any object of the given type and value.
+         * @tparam - Type Type of the object to store.
+         * @param - value Value to store.
+         */
         template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, any>>>
         any(Type &&value) // NOLINT(google-explicit-constructor)
                 :any{}
@@ -80,6 +87,12 @@ namespace mirr
             initialize<std::decay_t<Type>>(std::forward<Type>(value));
         }
 
+        /**
+         * @brief Constructs an any object  of a given Type with optional arguments.
+         * @tparam Type - Type of the object to construct.
+         * @tparam Args - Type of the arguments to pass to the constructor.
+         * @param args - Arguments to pass to the constructor.
+         */
         template<typename Type, typename... Args>
         explicit any(std::in_place_type_t<Type>, Args &&... args)
                 :any{}
@@ -87,6 +100,10 @@ namespace mirr
             initialize<Type>(std::forward<Args>(args)...);
         }
 
+        /**
+         * @brief Copy constructor. Copies the value from another any object to this object.
+         * @param other - Other any to copy to this object.
+         */
         any(const any &other)
                 : any{}
         {
@@ -96,6 +113,10 @@ namespace mirr
             }
         }
 
+        /**
+         * @brief Move constructor. Moves the value and metadata from the other object to this.
+         * @param other - Object to move.
+         */
         any(const any &&other) noexcept // NOLINT(cppcoreguidelines-pro-type-member-init)
                 : instance{},
                   type_info{other.type_info},
@@ -108,6 +129,10 @@ namespace mirr
             }
         }
 
+        /**
+         * @brief Deconstructor. Destroys the any object. Will only destroy the value if this any
+         * object is the owner of the value.
+         */
         ~any()
         {
             if (vtable && owner())
@@ -116,6 +141,11 @@ namespace mirr
             }
         }
 
+        /**
+         * @brief Assignment operator. Copies the value from another any object.
+         * @param other - Object to assign value from.
+         * @return Reference to the any object.
+         */
         any &operator=(const any &other) noexcept // NOLINT(bugprone-unhandled-self-assignment)
         {
             reset();
@@ -126,6 +156,11 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Move operator. Moves a value from one any to another.
+         * @param - other Any object to move.
+         * @return Reference to the any object.
+         */
         any &operator=(any &&other) noexcept // NOLINT(bugprone-unhandled-self-assignment)
         {
             reset();
@@ -139,6 +174,11 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Assignment operator. Assigns this object's value from a value.
+         * @tparam Type - Type of the value to assign.
+         * @param value - Value to assign.
+         */
         template<typename Type>
         std::enable_if_t<!std::is_same_v<std::decay_t<Type>, any>, any &> // NOLINT(misc-unconventional-assign-operator)
         operator=(Type &&value)
@@ -147,16 +187,30 @@ namespace mirr
             return *this;
         }
 
+        /**
+         * @brief Gets a const raw pointer to the data stored in the any object.
+         * @return Const pointer to the data.
+         */
         [[nodiscard]] const void *data() const noexcept
         {
             return vtable ? vtable(internal::any_operation::get, *this, nullptr) : nullptr;
         }
 
+        /**
+         * @brief Gets a const raw pointer to the data stored in the any object.
+         * @param info - ID of the type contained in the any object.
+         * @return Returns a const pointer to the data if the provided type matches the type of data
+         * stored, else returns nullptr.
+         */
         [[nodiscard]] const void *data(type_id info) const noexcept
         {
             return type_info._id == info ? data() : nullptr;
         }
 
+        /**
+         * @brief Gets a raw pointer to the data stored in the any object.
+         * @return Pointer to the data.
+         */
         [[nodiscard]] void *data() noexcept
         {
             return (!vtable || policy == internal::any_policy::cref) ? nullptr
@@ -164,22 +218,39 @@ namespace mirr
                             internal::any_operation::get, *this, nullptr));
         }
 
+        /**
+         * @brief Gets a raw pointer to the data stored in the any object.
+         * @param info -  ID of the type contained in the any object.
+         * @return Returns a pointer to the data if the provided type matches the type of data
+         * stored, else returns nullptr.
+         */
         [[nodiscard]] void *data(type_id info) noexcept
         {
             return type_info._id == info ? data() : nullptr;
         }
 
 
+        /**
+         * @brief Gets the type of the value stored in the any object.
+         * @return Type object containing information about the type.
+         */
         [[nodiscard]] const mirr::type &type() const noexcept
         {
             return type_info;
         }
 
+        /**
+         * @brief Get whether the value is owned by the any object.
+         * @return True if this any object owns the value, false otherwise.
+         */
         [[nodiscard]] bool owner() const noexcept
         {
             return policy == internal::any_policy::owner;
         }
 
+        /**
+         * @brief Resets this any object, destroys the value (if owned), and resets type information.
+         */
         void reset()
         {
             if (vtable && owner())
@@ -192,6 +263,12 @@ namespace mirr
             policy = internal::any_policy::owner;
         }
 
+        /**
+         * @brief Resets the object and assigns a new value.
+         * @tparam Type - Type of the object to assign.
+         * @tparam Args - Type of arguments.
+         * @param args - Arguments used to construct an object of the Type.
+         */
         template<typename Type, typename... Args>
         void emplace(Args &&...args)
         {
@@ -199,6 +276,11 @@ namespace mirr
             initialize<Type>(std::forward<Args>(args)...);
         }
 
+        /**
+         * @brief Resets this object, and assigns a new value using an existing any object.
+         * @param other - Other any object used to assign.
+         * @return Returns true if the assign operation was successful, false otherwise.
+         */
         bool assign(const any &other)
         {
             if (vtable && policy != internal::any_policy::cref && type_info == other.type_info)
@@ -208,11 +290,20 @@ namespace mirr
             return false;
         }
 
+        /**
+         * @brief Bool operator.
+         * @return Returns true if this object is valid, false otherwise.
+         */
         [[nodiscard]] explicit operator bool() const noexcept
         {
             return vtable != nullptr;
         }
 
+        /**
+         * @brief Comparison operator.
+         * @param other - Other any object to compare to.
+         * @return Returns true if the object contain the same type and values, false otherwise.
+         */
         bool operator==(const any &other) const noexcept
         {
             if (vtable && type_info == other.type_info)
@@ -223,6 +314,11 @@ namespace mirr
         }
 
 
+        /**
+         * @brief Tries to cast this object to the provided type.
+         * @tparam Type - Type to cast this object to.
+         * @return Returns a pointer of the Type if the conversion was successful, returns nullptr otherwise.
+         */
         template<typename Type>
         Type *try_cast() noexcept
         {
@@ -236,6 +332,16 @@ namespace mirr
             return nullptr;
         }
 
+        /**
+         * @brief Tries to cast this object to the provided type, or converts the any object to the type if
+         * the object is convertible.
+         *
+         * If conversion is possible, the any object is converted, and type information for this object will reflect
+         * the converted type.
+         *
+         * @tparam Type - Type of the object to attempt cast or conversion.
+         * @return Pointer to the casted or converted type if the conversion was successful, otherwise returns nullptr.
+         */
         template<typename Type>
         Type *try_cast_or_convert() noexcept
         {
@@ -243,7 +349,8 @@ namespace mirr
             if (id == type_info._id)
             {
                 return static_cast<Type *>(this->data(id));
-            } else if (type_info.is_convertible<Type>())
+            }
+            else if (type_info.is_convertible<Type>())
             {
                 any result = try_conversion(id);
                 reset();
@@ -259,6 +366,11 @@ namespace mirr
             return nullptr;
         }
 
+        /**
+         * @brief Converts the any object to the provided type if the object is convertible.
+         * @tparam Type - Type to convert the value to.
+         * @return Any object with the type converted to the new type.
+         */
         template<typename Type>
         any convert() noexcept
         {
@@ -270,6 +382,14 @@ namespace mirr
             return any{};
         }
 
+        /**
+         * @brief Casts this object to the provided type.
+         *
+         * Note: "try_cast" is recommended over this function, as this function is unsafe.
+         * @tparam Type - Type of the value.
+         * @tparam Ret - Return type.
+         * @return Value casted to the provided type.
+         */
         template<typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
         Ret cast() noexcept
         {
@@ -277,6 +397,19 @@ namespace mirr
             return *ptr;
         }
 
+        /**
+         * @brief Casts this object to the provided type, or converts the any object to the type if
+         * the object is convertible.
+         *
+         * If conversion is possible, the any object is converted, and type information for this object will reflect
+         * the converted type.
+         *
+         * Note: "try_cast_or_convert" is recommended over this function, as this function is unsafe.
+         *
+         * @tparam Type - Type of the object to attempt cast or conversion.
+         * @tparam Ret - Return type.
+         * @return Pointer to the casted or converted type if the conversion was successful, otherwise returns nullptr.
+         */
         template<typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
         Ret cast_or_convert() noexcept
         {
@@ -288,18 +421,34 @@ namespace mirr
             return *try_cast<Ret>();
         }
 
+        /**
+         * @brief Checks whether this object can be casted to the provided type.
+         * @tparam Type - Type to check for cast.
+         * @return Returns true if the object can be cast, false otherwise.
+         */
         template<typename Type>
         bool can_cast() noexcept
         {
             return try_cast<std::remove_cv_t<std::remove_reference_t<Type>>>() != nullptr;
         }
 
+        /**
+         * @brief Checks whether this object can be converted to the provided type.
+         *
+         * @tparam Type - Type to check for conversion.
+         * @return Returns true of the object can be converted, false otherwise.
+         */
         template<typename Type>
         bool can_convert() noexcept
         {
             return type_info.is_convertible<Type>();
         }
 
+        /**
+         * @brief Checks whether the object can bbe cast or converted to the provided type.
+         * @tparam Type - Type to check.
+         * @return Returns true if the object can be cast or converted to, false otherwise.
+         */
         template<typename Type>
         bool can_cast_or_convert()
         {
@@ -308,7 +457,14 @@ namespace mirr
 
     private:
 
-
+        /**
+         * @brief Initializes the any object for a given type.
+         * Constructs type information, vtable for operations, allocates storage if necessary, and initializes the
+         * value from the given arguments.
+         * @tparam Type - Type of value this any object will store.
+         * @tparam Args - Type of arguments.
+         * @param args - Arguments passed to the value constructor for initialization.
+         */
         template<typename Type, typename... Args>
         void initialize([[maybe_unused]] Args &&... args)
         {
@@ -345,6 +501,14 @@ namespace mirr
         }
 
 
+        /**
+         * @brief VTable containing operations needed for any type, to be created on initialization.
+         * @tparam Type - Type of the value stored in the any object.
+         * @param op - Operation to perform.
+         * @param value - Value to pass to the operation.
+         * @param other - Any other data needed for performing the operation.
+         * @return Any data returned by the operation.
+         */
         template<typename Type>
         static const void *basic_vtable(const internal::any_operation op, const any &value, const void *other)
         {
@@ -353,6 +517,8 @@ namespace mirr
                     "Invalid type!");
             const Type *val;
 
+            // Checks whether the Type is stored "in situ",
+            // AKA stored inline without the need for additional allocation.
             if constexpr (in_situ<Type>)
             {
                 val = value.owner() ? reinterpret_cast<const Type *>(&value.storage)
@@ -423,6 +589,11 @@ namespace mirr
             return nullptr;
         }
 
+        /**
+         * @brief Converts an object to another type given the type id.
+         * @param type_id - ID of the type to convert to.
+         * @return Converted any object.
+         */
         any try_conversion(uint32_t type_id);
 
     private:

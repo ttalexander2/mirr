@@ -9,8 +9,12 @@
 
 namespace mirr
 {
+    // Forward declarations
     class type_container;
 
+    /**
+     *
+     */
     class registry
     {
     public:
