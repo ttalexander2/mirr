@@ -45,6 +45,8 @@ namespace mirr
         any (*get)(handle);
 
         data_flags flags;
+
+        std::unordered_map<uint32_t, any> user_data;
     };
 
     /**
@@ -67,6 +69,8 @@ namespace mirr
 
         bool is_const;
         bool is_static;
+
+        std::unordered_map<uint32_t, any> user_data;
     };
 
     /**

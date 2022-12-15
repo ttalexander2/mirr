@@ -131,6 +131,7 @@ namespace mirr
 #define REFLECT(_TYPE_NAME_) \
         using type_factory = mirr::type_factory<_TYPE_NAME_>;  \
         static inline mirr::type_initializer<_TYPE_NAME_> _reflection_type_initializer{};
+        static inline type_factory
 #endif
 #endif
 

@@ -43,6 +43,14 @@ public:
     void some_func(){}
     void some_func(int arg){}
 
+
+    enum class my_custom_flags : uint32_t
+    {
+        none = 0,
+        serialize = 1 << 0,
+        font = 2 << 0
+    };
+
     static inline type_factory register_type()
     {
         std::cout << "called register_type\n";

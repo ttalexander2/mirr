@@ -197,7 +197,7 @@ namespace mirr
          * @return Returns a reference to this type factory.
          */
         template<auto Data>
-        type_factory &data(const std::string &name, bool serialize = true)
+        type_factory &data(const std::string &name, std::vector<std::tuple<uint32_t, any>> user_data = {})
         {
             uint32_t hash = basic_hash<uint32_t>::hash(name);
             type_info *info = _type.info();
@@ -207,11 +207,6 @@ namespace mirr
                 data.id = hash;
                 data.name = name;
                 data.flags = data_flags::none;
-
-                if (serialize)
-                {
-                    data.flags |= data_flags::is_serialized;
-                }
 
                 // Checks if the data is a member of the type.
                 if constexpr (std::is_member_object_pointer_v<decltype(Data)>)
@@ -242,6 +237,11 @@ namespace mirr
                     data.set = &internal::set_function<Type, Data>;
                 }
 
+                for (auto item : user_data)
+                {
+                    data.user_data[std::get<0>(item)] = std::get<1>(item);
+                }
+
                 info->data[hash] = data;
             }
 
@@ -257,7 +257,7 @@ namespace mirr
          * @return Returns a reference to this type factory.
          */
         template<auto Getter, auto Setter>
-        type_factory &data(const std::string &name, bool serialize = true)
+        type_factory &data(const std::string &name, const std::vector<std::tuple<uint32_t, any>>& user_data = {})
         {
             static_assert(!std::is_same_v<decltype(Getter), std::nullptr_t>, "Getter cannot be nullptr!");
             uint32_t hash = basic_hash<uint32_t>::hash(name);
@@ -268,11 +268,6 @@ namespace mirr
                 data.id = hash;
                 data.name = name;
                 data.flags = data_flags::none;
-
-                if (serialize)
-                {
-                    data.flags |= data_flags::is_serialized;
-                }
 
                 // If there is no setter function (i.e data is readonly)
                 if constexpr (std::is_same_v<decltype(Setter), std::nullptr_t>)
@@ -296,11 +291,46 @@ namespace mirr
                     data.set = &internal::set_function<Type, Setter>;
                 }
 
+                for (auto item : user_data)
+                {
+                    data.user_data[std::get<0>(item)] = std::get<1>(item);
+                }
+
                 info->data[hash] = data;
             }
 
             return *this;
         }
+
+
+        template<auto Data>
+        type_factory &data(const std::string &name, const std::vector<std::tuple<std::string, any>>& user_data)
+        {
+            std::vector<std::tuple<uint32_t, any>> user_data_hashed;
+            user_data_hashed.reserve(user_data.size());
+
+            for (auto& item : user_data)
+            {
+                user_data_hashed.emplace_back(basic_hash<uint32_t>::hash(std::get<0>(item)), std::get<1>(item));
+            }
+            return data<Data>(name, user_data_hashed);
+        }
+
+        template<auto Getter, auto Setter>
+        type_factory &data(const std::string &name, const std::vector<std::tuple<std::string, any>>& user_data)
+        {
+            std::vector<std::tuple<uint32_t, any>> user_data_hashed;
+            user_data_hashed.reserve(user_data.size());
+
+            for (auto& item : user_data)
+            {
+                user_data_hashed.emplace_back(basic_hash<uint32_t>::hash(std::get<0>(item)), std::get<1>(item));
+            }
+            return data<Getter, Setter>(name, user_data_hashed);
+        }
+
+
+
 
         /**
          * @brief Registers a function to this type.
@@ -309,7 +339,7 @@ namespace mirr
          * @return Returns a reference to this type factory.
          */
         template<auto Func>
-        type_factory &function(const std::string &name)
+        type_factory &function(const std::string &name, const std::vector<std::tuple<uint32_t, any>>& user_data = {})
         {
             using descriptor = internal::function_helper_t<Type, decltype(Func)>;
 
@@ -324,10 +354,36 @@ namespace mirr
                 func.return_type = internal::type_hash_v<typename descriptor::return_type>;
                 func.arg = &internal::func_arg<typename descriptor::args_type>;
                 func.invoke = &internal::func_invoke<Type, Func>;
+
+                for (auto item : user_data)
+                {
+                    func.user_data[std::get<0>(item)] = std::get<1>(item);
+                }
+
                 info->functions[hash] = func;
             }
 
             return *this;
+        }
+
+        /**
+         * @brief Registers a function to this type.
+         * @tparam Func - Function pointer
+         * @param name - User provided identifier for the function.
+         * @param user_data - List of key value pairs for user data.
+         * @return Returns a reference to this type factory.
+         */
+        template<auto Func>
+        type_factory &function(const std::string &name, const std::vector<std::tuple<std::string, any>>& user_data)
+        {
+            std::vector<std::tuple<uint32_t, any>> user_data_hashed;
+            user_data_hashed.reserve(user_data.size());
+
+            for (auto& item : user_data)
+            {
+                user_data_hashed.emplace_back(basic_hash<uint32_t>::hash(std::get<0>(item)), std::get<1>(item));
+            }
+            return function<Func>(name, user_data_hashed);
         }
 
         /**
@@ -347,6 +403,16 @@ namespace mirr
             }
 
             return *this;
+        }
+
+        type_factory &user_data(const std::tuple<uint32_t, any>& data)
+        {
+            return user_data(std::get<0>(data), std::get<1>(data));
+        }
+
+        type_factory &user_data(const std::tuple<std::string, any>& data)
+        {
+            return user_data(basic_hash<uint32_t>::hash(std::get<0>(data)), std::get<1>(data));
         }
 
     private:

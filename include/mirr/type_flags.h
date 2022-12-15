@@ -27,8 +27,7 @@ namespace mirr
     {
         none = 0,
         is_const = 1 << 0,
-        is_serialized = 1 << 1,
-        is_static = 1 << 2
+        is_static = 1 << 1
     };
 
     // Helper Operators:

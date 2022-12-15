@@ -119,6 +119,8 @@ namespace mirr
             return invoke_internal(std::move(handle), arguments, sizeof...(Args));
         }
 
+        [[nodiscard]] any user_data(const std::string& key) const;
+
     private:
         /**
          * @brief Constructs a function object from the given function ID and type ID.

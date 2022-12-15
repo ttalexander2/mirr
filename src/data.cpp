@@ -40,13 +40,6 @@ namespace mirr
         return registry::resolve(_type_id);
     }
 
-    bool data::is_serialized() const
-    {
-        if (valid())
-            return internal::has_flag(type_data::instance().types[_type_id].data[_id].flags, data_flags::is_serialized);
-        return false;
-    }
-
     bool data::is_const() const
     {
         if (valid())
@@ -85,6 +78,16 @@ namespace mirr
         if (valid())
             return registry::resolve(type_data::instance().types[_type_id].data[_id].type_id);
         return registry::resolve<void>();
+    }
+
+    any data::user_data(const std::string &key) const
+    {
+        if (valid())
+        {
+            uint32_t hash = basic_hash<uint32_t>::hash(key);
+            return type_data::instance().types[_type_id].data[_id].user_data[hash];
+        }
+        return any{};
     }
 
 

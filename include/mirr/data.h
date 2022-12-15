@@ -90,12 +90,6 @@ namespace mirr
          [[nodiscard]] mirr::type data_type() const;
 
         /**
-         * @brief Flag representing whether this data should be serialized.
-         * @return True if the data should be serialized, false otherwise.
-         */
-        [[nodiscard]] bool is_serialized() const;
-
-        /**
          * @brief Flag representing whether this data is const.
          * @return True if the data is const, false otherwise.
          */
@@ -121,6 +115,13 @@ namespace mirr
          * @return Returns true if the set operation was successful, false otherwise.
          */
         [[nodiscard]] bool set(mirr::handle handle, const any &value) const;
+
+        /**
+         * @brief Gets user data associated with this data member
+         * @param key - User provided data key.
+         * @return User data value.
+         */
+        [[nodiscard]] any user_data(const std::string& key) const;
 
     private:
         /**
