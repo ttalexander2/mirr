@@ -187,4 +187,12 @@ namespace mirr
     {
         return mirr::constructor_container(_id);
     }
+
+    any type::user_data(uint32_t hash) const
+    {
+        if (!valid() || type_data::instance().types[_id].user_data.find(hash) == type_data::instance().types[_id].user_data.end())
+            return any{};
+
+        return any{type_data::instance().types[_id].user_data[hash]};
+    }
 }

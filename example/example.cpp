@@ -8,11 +8,7 @@ struct test_type
 {
     REFLECT(test_type);
 private:
-    template <typename Data>
-    static inline type_factory register_data()
-    {
 
-    }
 public:
 
     test_type(const std::string &name, int val) : value(val), name(name), other(0)

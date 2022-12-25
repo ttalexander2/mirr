@@ -221,6 +221,14 @@ namespace mirr
          */
         [[nodiscard]] any user_data(const std::string& key) const;
 
+
+        /**
+         * @brief Gets a piece of user data associated with this type, from the given key.
+         * @param hash - Key of the user data to retrieve.
+         * @return Any object containing the stored user data.
+         */
+        [[nodiscard]] any user_data(uint32_t hash) const;
+
         /**
          * @brief Checks whether the type is convertible to the specified type.
          * @param type_id - ID of the type to check for conversion.
