@@ -319,7 +319,7 @@ namespace mirr
     	 * @return True if the type is Type, false otherwise.
     	 */
     	template<typename Type>
-    	bool is_type() noexcept
+    	bool is_type() const noexcept
         {
 	        return type_info.id() == internal::type_hash_v<Type>;
         }
