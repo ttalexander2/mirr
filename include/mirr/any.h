@@ -313,6 +313,16 @@ namespace mirr
             return (!vtable && !other.vtable);
         }
 
+    	/**
+    	 * @brief Checks if the data is of type Type.
+    	 * @tparam Type - Type to check.
+    	 * @return True if the type is Type, false otherwise.
+    	 */
+    	template<typename Type>
+    	bool is_type() noexcept
+        {
+	        return type_info.id() == internal::type_hash_v<Type>;
+        }
 
         /**
          * @brief Tries to cast this object to the provided type.
@@ -327,7 +337,7 @@ namespace mirr
             {
                 Type* data = static_cast<Type *>(this->data(id));
                 if (data != nullptr)
-                    return std::move(data);
+                    return data;
             }
             return nullptr;
         }
@@ -394,7 +404,7 @@ namespace mirr
         Ret cast() noexcept
         {
             Ret *ptr = this->try_cast<Ret>();
-            return *ptr;
+            return std::copy(*ptr);
         }
 
         /**

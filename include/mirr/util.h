@@ -189,7 +189,8 @@ namespace mirr::internal
                         return true;
                     }
                 }
-            } else if constexpr (std::is_member_object_pointer_v<decltype(Data)>)
+            }
+        	else if constexpr (std::is_member_object_pointer_v<decltype(Data)>)
             {
                 using data_type = std::remove_reference_t<typename function_helper_t<Type, decltype(Data)>::return_type>;
                 if constexpr (!std::is_array_v<data_type> && !std::is_const_v<data_type>)
