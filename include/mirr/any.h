@@ -342,6 +342,19 @@ namespace mirr
             return nullptr;
         }
 
+    	template<typename Type>
+		const Type *try_cast() const noexcept
+        {
+        	auto id = internal::type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
+        	if (id == type_info._id)
+        	{
+        		const Type* data = static_cast<const Type *>(this->data(id));
+        		if (data != nullptr)
+        			return data;
+        	}
+        	return nullptr;
+        }
+
         /**
          * @brief Tries to cast this object to the provided type, or converts the any object to the type if
          * the object is convertible.
@@ -401,10 +414,15 @@ namespace mirr
          * @return Value casted to the provided type.
          */
         template<typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
-        Ret cast() noexcept
+        const Ret cast() const noexcept
         {
-            Ret *ptr = this->try_cast<Ret>();
-            return std::copy(*ptr);
+        	return *try_cast<Type>();
+        }
+
+    	template<typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
+    	Ret cast() noexcept
+        {
+        	return *try_cast<Type>();
         }
 
         /**
@@ -449,7 +467,7 @@ namespace mirr
          * @return Returns true of the object can be converted, false otherwise.
          */
         template<typename Type>
-        bool can_convert() noexcept
+    	bool can_convert() const noexcept
         {
             return type_info.is_convertible<Type>();
         }

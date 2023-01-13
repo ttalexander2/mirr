@@ -247,6 +247,20 @@ namespace mirr
             return is_convertible(internal::type_hash_v<To>);
         }
 
+    	template<typename T>
+    	[[nodiscard]] bool is()
+        {
+	        return id() == internal::type_hash_v<T>;
+        }
+
+    	template<typename T>
+    	[[nodiscard]] bool is() const
+        {
+	        return id() == internal::type_hash_v<T>;
+        }
+
+    	[[nodiscard]] const std::vector<uint32_t>& bases() const;
+
         /**
          * @brief Gets the flags for this type. This enum represents all the flags for a type,
          * which can either be checked using this enum, or any of the is_... functions.

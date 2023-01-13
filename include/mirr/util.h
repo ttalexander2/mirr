@@ -168,7 +168,7 @@ namespace mirr::internal
 
 
     template<typename Type, auto Data>
-    [[nodiscard]] bool set_function(mirr::handle handle, any value)
+    [[nodiscard]] bool set_function([[maybe_unused]] mirr::handle handle, [[maybe_unused]] any value)
     {
         if (handle.type().id() != type_hash_v<Type>)
             return false;
