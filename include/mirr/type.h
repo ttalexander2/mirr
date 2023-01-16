@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 #include "type_flags.h"
 #include "type_hash.h"
 

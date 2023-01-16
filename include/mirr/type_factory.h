@@ -220,7 +220,7 @@ namespace mirr
                         data.flags |= data_flags::is_const;
                     }
                     data.get = &internal::get_function<Type, Data>;
-                    data.set = &internal::set_function<Type, Data>;
+                    data.set = &internal::set_function<Type, Data, data_type>;
                 }
                 else
                 {
@@ -234,7 +234,7 @@ namespace mirr
                     }
                     data.flags |= data_flags::is_static;
                     data.get = &internal::get_function<Type, Data>;
-                    data.set = &internal::set_function<Type, Data>;
+                    data.set = &internal::set_function<Type, Data, data_type>;
                 }
 
                 for (auto item : user_data)
@@ -277,7 +277,7 @@ namespace mirr
                     type_factory<data_type>::register_type();
                     data.type_id = internal::type_hash_v<data_type>;
                     data.get = &internal::get_function<Type, Getter>;
-                    data.set = &internal::set_function<Type, Setter>;
+                    data.set = &internal::set_function<Type, Setter, data_type>;
                     data.flags |= data_flags::is_const;
                 }
                 else
@@ -288,7 +288,7 @@ namespace mirr
                     data.type_id = internal::type_hash_v<data_type>;
                     data.flags |= data_flags::is_static;
                     data.get = &internal::get_function<Type, Getter>;
-                    data.set = &internal::set_function<Type, Setter>;
+                    data.set = &internal::set_function<Type, Setter, data_type>;
                 }
 
                 for (auto item : user_data)

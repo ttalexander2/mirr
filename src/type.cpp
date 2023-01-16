@@ -196,7 +196,7 @@ namespace mirr
         return any{type_data::instance().types[_id].user_data[hash]};
     }
 
-	const std::vector<uint32_t>& bases() const
+	const std::vector<uint32_t>& type::bases() const
     {
     	if (valid())
     		return type_data::instance().types[_id].bases;

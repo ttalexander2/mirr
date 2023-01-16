@@ -122,7 +122,7 @@ namespace mirr::internal
 
     template<typename T>
     struct is_equality_comparable<T,
-            typename std::enable_if<true, decltype(std::declval<const T &>() ==
+            typename std::enable_if<true && !is_associative_container_v<T> && !is_sequence_container_v<T>, decltype(std::declval<const T &>() ==
                                                    std::declval<const T &>(), (void) 0)>::type>
             : std::true_type
     {

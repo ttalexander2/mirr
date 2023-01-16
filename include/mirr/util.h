@@ -67,8 +67,8 @@ namespace mirr::internal
         using args_type = std::conditional_t<std::is_base_of_v<Class, Type>,
                 type_list<Args...>, type_list<const Class &, Args...>>;
 
-        static constexpr auto is_const = true;
-        static constexpr auto is_static = !std::is_base_of_v<Class, Type>;
+        static constexpr bool is_const = true;
+        static constexpr bool is_static = !std::is_base_of_v<Class, Type>;
     };
 
     template<typename Type, typename Ret, typename Class, typename... Args>
@@ -78,8 +78,8 @@ namespace mirr::internal
         using args_type = std::conditional_t<std::is_base_of_v<Class, Type>,
                 type_list<Args...>, type_list<Class &, Args...>>;
 
-        static constexpr auto is_const = false;
-        static constexpr auto is_static = !std::is_base_of_v<Class, Type>;
+        static constexpr bool is_const = false;
+        static constexpr bool is_static = !std::is_base_of_v<Class, Type>;
     };
 
     template<typename Type, typename Ret, typename Class>
@@ -88,8 +88,8 @@ namespace mirr::internal
         using return_type = Ret &;
         using args_type = std::conditional_t<std::is_base_of_v<Class, Type>, type_list<>, type_list<Class &>>;
 
-        static constexpr auto is_const = false;
-        static constexpr auto is_static = !std::is_base_of_v<Class, Type>;
+        static constexpr bool is_const = false;
+        static constexpr bool is_static = !std::is_base_of_v<Class, Type>;
     };
 
     template<typename Type, typename Ret, typename MaybeType, typename... Args>
@@ -99,9 +99,9 @@ namespace mirr::internal
         using args_type = std::conditional_t<std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>,
                 Type>, type_list<Args...>, type_list<MaybeType, Args...>>;
 
-        static constexpr auto is_const = std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>
+        static constexpr bool is_const = std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>
                                          && std::is_const_v<std::remove_reference_t<MaybeType>>;
-        static constexpr auto is_static = !std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>;
+        static constexpr bool is_static = !std::is_base_of_v<std::remove_cv_t<std::remove_reference_t<MaybeType>>, Type>;
     };
 
     template<typename Type, typename Ret>
@@ -109,8 +109,8 @@ namespace mirr::internal
     {
         using return_type = Ret;
         using args_type = type_list<>;
-        static constexpr auto is_const = false;
-        static constexpr auto is_static = true;
+        static constexpr bool is_const = false;
+        static constexpr bool is_static = true;
     };
 
     template<typename Type, typename Candidate>
@@ -167,7 +167,7 @@ namespace mirr::internal
     using type_list_element_t = typename type_list_element<Index, List>::type;
 
 
-    template<typename Type, auto Data>
+    template<typename Type, auto Data, typename DataType>
     [[nodiscard]] bool set_function([[maybe_unused]] mirr::handle handle, [[maybe_unused]] any value)
     {
         if (handle.type().id() != type_hash_v<Type>)
@@ -178,12 +178,11 @@ namespace mirr::internal
             if constexpr (std::is_member_function_pointer_v<decltype(Data)>
                           || std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>>)
             {
-                using descriptor = function_helper_t<Type, decltype(Data)>;
-                using data_type = type_list_element_t<descriptor::is_static, typename descriptor::args_type>;
+                using descriptor = function_helper_t<std::decay_t<Type>, decltype(Data)>;
 
                 if (auto *const clazz = handle.try_cast<Type>(); clazz)
                 {
-                    if (auto *val = value.try_cast<data_type>(); val)
+                    if (auto const *val = value.try_cast_or_convert<DataType>(); val)
                     {
                         detail::invoke(Data, *clazz, *val);
                         return true;
@@ -197,7 +196,7 @@ namespace mirr::internal
                 {
                     if (auto *const clazz = handle.try_cast<Type>(); clazz)
                     {
-                        if (auto *val = value.try_cast<data_type>(); val)
+                        if (auto const *val = value.try_cast_or_convert<data_type>(); val)
                         {
                             detail::invoke(Data, *clazz) = *val;
                             return true;
