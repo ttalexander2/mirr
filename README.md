@@ -4,7 +4,8 @@
 
 ---
 Mirr aims to be a simple runtime reflection library for c++.
-It was written for use in the chroma engine, and also takes ideas from the entt reflection library.
+It was written for use in the chroma engine. The API was written to be similar to the meta reflection system from
+the popular ECS library `entt`, while attempting to simplify the API, and make integration into a game engine easier.
 
 ### Usage
 
@@ -14,7 +15,8 @@ The following is a simple example of the reflection system.
 
 #include <mirr/mirr.h>
 
-class vector
+// We'll use this type for demonstrating usage.
+struct vector
 {
     float x, y, z;
     float magnitude();
