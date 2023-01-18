@@ -65,7 +65,7 @@ namespace mirr
     {
         if (!valid())
             return false;
-        return type_data::instance().types[_type_id].data[_id].set(std::move(handle), value);
+        return type_data::instance().types[_type_id].data[_id].set(handle, value);
     }
 
     bool data::operator==(const data &rhs) const
@@ -80,14 +80,28 @@ namespace mirr
         return registry::resolve<void>();
     }
 
-    any data::user_data(const std::string &key) const
+    any data::user_data(uint32_t key) const
     {
         if (valid())
         {
-            uint32_t hash = basic_hash<uint32_t>::hash(key);
-            return type_data::instance().types[_type_id].data[_id].user_data[hash];
+            return type_data::instance().types[_type_id].data[_id].user_data[key];
         }
         return any{};
+    }
+	
+	any data::user_data(const std::string& key) const
+    {
+    	return user_data(basic_hash<uint32_t>(key));
+    }
+
+	bool data::has_user_data(uint32_t hash) const
+    {
+    	return valid() && type_data::instance().types[_type_id].data[_id].user_data.find(hash) != type_data::instance().types[_type_id].data[_id].user_data.end();
+    }
+
+	bool data::has_user_data(const std::string& key) const
+    {
+    	return has_user_data(basic_hash<uint32_t>(key));
     }
 
 

@@ -643,6 +643,15 @@ namespace mirr
         {
             initialize<Type &>(std::forward<Type &>(value));
         }
+
+    	explicit handle(any& value)
+        {
+        	type_info = value.type_info;
+        	vtable = value.vtable;
+        	instance = value.data();
+        	storage = value.storage;
+        	policy = internal::any_policy::ref;
+        }
     };
 
 }

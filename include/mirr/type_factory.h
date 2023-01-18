@@ -386,6 +386,23 @@ namespace mirr
             return function<Func>(name, user_data_hashed);
         }
 
+    	type_factory &user_data(uint32_t key, any value)
+        {
+        	type_info *info = _type.info();
+        	if (info != nullptr)
+        	{
+        		info->user_data[key] = std::move(value);
+        	}
+
+        	return *this;
+        }
+
+    	template <typename KeyType, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<KeyType>, uint32_t>>>
+		type_factory &user_data(KeyType&& key, any value)
+    	{
+        	return user_data(static_cast<uint32_t>(key), value);
+    	}
+
         /**
          * @brief Associates key/value user data to this type.
          * @param key - Key of the data
@@ -394,16 +411,10 @@ namespace mirr
          */
         type_factory &user_data(const std::string& key, any value)
         {
-            uint32_t hash = basic_hash<uint32_t>::hash(key);
-
-            type_info *info = _type.info();
-            if (info != nullptr)
-            {
-                info->user_data[hash] = std::move(value);
-            }
-
-            return *this;
+            return user_data(basic_hash<uint32_t>::hash(key), value);
         }
+
+
 
         type_factory &user_data(const std::tuple<uint32_t, any>& data)
         {

@@ -116,12 +116,38 @@ namespace mirr
          */
         bool set(mirr::handle handle, const any &value) const;
 
-        /**
-         * @brief Gets user data associated with this data member
-         * @param key - User provided data key.
-         * @return User data value.
-         */
-        [[nodiscard]] any user_data(const std::string& key) const;
+    	/**
+		 * @brief Gets a piece of user data associated with this type, from the given key.
+		 * @param key - Key of the user data to retrieve.
+		 * @return Any object containing the stored user data.
+		 */
+    	[[nodiscard]] any user_data(const std::string& key) const;
+
+
+    	/**
+		 * @brief Gets a piece of user data associated with this type, from the given key.
+		 * @param hash - Key of the user data to retrieve.
+		 * @return Any object containing the stored user data.
+		 */
+    	[[nodiscard]] any user_data(uint32_t hash) const;
+
+    	template <typename KeyType, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<KeyType>, uint32_t>>>
+		[[nodiscard]] any user_data(KeyType&& key) const
+    	{
+    		return user_data(static_cast<uint32_t>(key));
+    	}
+
+
+    	
+    	[[nodiscard]] bool has_user_data(const std::string& key) const;
+    	
+    	[[nodiscard]] bool has_user_data(uint32_t hash) const;
+
+    	template <typename KeyType, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<KeyType>, uint32_t>>>
+		[[nodiscard]] bool has_user_data(KeyType&& key) const
+    	{
+    		return has_user_data(static_cast<uint32_t>(key));
+    	}
 
     private:
         /**

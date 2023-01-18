@@ -230,6 +230,24 @@ namespace mirr
          */
         [[nodiscard]] any user_data(uint32_t hash) const;
 
+    	template <typename KeyType, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<KeyType>, uint32_t>>>
+		[[nodiscard]] any user_data(KeyType&& key) const
+    	{
+    		return user_data(static_cast<uint32_t>(key));
+    	}
+
+
+    	
+    	[[nodiscard]] bool has_user_data(const std::string& key) const;
+    	
+    	[[nodiscard]] bool has_user_data(uint32_t hash) const;
+
+    	template <typename KeyType, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<KeyType>, uint32_t>>>
+		[[nodiscard]] bool has_user_data(KeyType&& key) const
+    	{
+    		return has_user_data(static_cast<uint32_t>(key));
+    	}
+
         /**
          * @brief Checks whether the type is convertible to the specified type.
          * @param type_id - ID of the type to check for conversion.

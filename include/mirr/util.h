@@ -171,7 +171,11 @@ namespace mirr::internal
     [[nodiscard]] bool set_function([[maybe_unused]] mirr::handle handle, [[maybe_unused]] any value)
     {
         if (handle.type().id() != type_hash_v<Type>)
-            return false;
+        {
+        	CHROMA_CORE_ERROR("{} =? {}", handle.type().id(), type_hash_v<Type>);
+        	return false;
+        }
+
 
         if constexpr (!std::is_same_v<decltype(Data), Type> && !std::is_same_v<decltype(Data), std::nullptr_t>)
         {

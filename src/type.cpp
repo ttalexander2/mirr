@@ -169,13 +169,27 @@ namespace mirr
         return mirr::function_container(_id);
     }
 
-    any type::user_data(const std::string& key) const
+	any type::user_data(uint32_t hash) const
     {
-        uint32_t hash = basic_hash<uint32_t>(key);
         if (!valid() || type_data::instance().types[_id].user_data.find(hash) == type_data::instance().types[_id].user_data.end())
             return any{};
 
         return any{type_data::instance().types[_id].user_data[hash]};
+    }
+
+    any type::user_data(const std::string& key) const
+    {
+        return user_data(basic_hash<uint32_t>(key));
+    }
+
+	bool type::has_user_data(uint32_t hash) const
+    {
+    	return valid() && type_data::instance().types[_id].user_data.find(hash) != type_data::instance().types[_id].user_data.end();
+    }
+
+	bool type::has_user_data(const std::string& key) const
+    {
+    	return has_user_data(basic_hash<uint32_t>(key));
     }
 
     mirr::constructor type::constructor(uint32_t id) const
@@ -188,13 +202,7 @@ namespace mirr
         return mirr::constructor_container(_id);
     }
 
-    any type::user_data(uint32_t hash) const
-    {
-        if (!valid() || type_data::instance().types[_id].user_data.find(hash) == type_data::instance().types[_id].user_data.end())
-            return any{};
 
-        return any{type_data::instance().types[_id].user_data[hash]};
-    }
 
 	const std::vector<uint32_t>& type::bases() const
     {
