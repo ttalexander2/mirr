@@ -11,9 +11,9 @@ namespace mirr
 {
 
     template<typename KeyType, typename>
-    auto type::user_data(KeyType &&key) const
+    any type::user_data(KeyType &&key) const
     {
-        return nullptr;
+        return user_data(static_cast<uint32_t>(key));
     }
 
 }
