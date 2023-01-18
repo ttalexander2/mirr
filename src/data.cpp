@@ -65,7 +65,7 @@ namespace mirr
     {
         if (!valid())
             return false;
-        return type_data::instance().types[_type_id].data[_id].set(handle, value);
+        return type_data::instance().types[_type_id].data[_id].set(std::move(handle), value);
     }
 
     bool data::operator==(const data &rhs) const

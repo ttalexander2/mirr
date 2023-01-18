@@ -230,11 +230,8 @@ namespace mirr
          */
         [[nodiscard]] any user_data(uint32_t hash) const;
 
-    	template <typename KeyType, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<KeyType>, uint32_t>>>
-		[[nodiscard]] any user_data(KeyType&& key) const
-    	{
-    		return user_data(static_cast<uint32_t>(key));
-    	}
+        template <typename KeyType, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<KeyType>, uint32_t>>>
+        [[nodiscard]] any user_data(KeyType&& key) const;
 
 
     	
@@ -278,7 +275,7 @@ namespace mirr
 	        return id() == internal::type_hash_v<T>;
         }
 
-    	[[nodiscard]] const std::vector<uint32_t>& bases() const;
+    	[[nodiscard]] std::vector<uint32_t> bases() const;
 
         /**
          * @brief Gets the flags for this type. This enum represents all the flags for a type,

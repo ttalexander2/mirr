@@ -172,7 +172,6 @@ namespace mirr::internal
     {
         if (handle.type().id() != type_hash_v<Type>)
         {
-        	CHROMA_CORE_ERROR("{} =? {}", handle.type().id(), type_hash_v<Type>);
         	return false;
         }
 
@@ -208,7 +207,8 @@ namespace mirr::internal
                     }
                 }
 
-            } else
+            }
+            else
             {
                 using data_type = std::remove_reference_t<decltype(*Data)>;
 

@@ -68,7 +68,7 @@ void foo()
 
 test_type create_test_type(char f)
 {
-    return test_type("aaah", 0);
+    return {"aaah", 0};
 }
 
 
@@ -116,18 +116,30 @@ int main()
     std::cout << "user_data(something): " << something << "\n";
 
     test_type instance("bob", 42);
+    mirr::any instance_copy = instance;
+
+    std::cout << "test_type id: " << mirr::resolve<test_type>().id() << "\n";
 
     auto d = type.data("value");
     std::cout << d.type().id() << "\n";
     std::cout << instance.value << "\n";
-    bool set_result = d.set(instance, 32);
+    bool set_result = d.set(mirr::handle(instance), 32);
     std::cout << set_result << "\n";
-    auto val = d.get(instance);
+    auto val = d.get(mirr::handle(instance));
     std::cout << val.cast<int>() << "\n";
+    std::cout << instance.value << "\n\n";
+
+
+    std::cout << d.get(mirr::handle(instance_copy)).cast<int>() << "\n";
+    set_result = d.set(mirr::handle(instance_copy), 32);
+    std::cout << set_result << "\n";
+    val = d.get(mirr::handle(instance_copy));
+    std::cout << val.cast<int>() << "\n";
+    std::cout << d.get(mirr::handle(instance_copy)).cast<int>() << "\n";
 
 
     auto f = type.func("foo");
-    f.invoke(instance, "a", "b");
+    f.invoke(mirr::handle(instance), "a", "b");
 
     std::cout << "\n";
 

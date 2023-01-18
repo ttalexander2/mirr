@@ -29,7 +29,8 @@ namespace mirr
             assign,
             destroy,
             compare,
-            get
+            get,
+            ref
         };
 
         /**
@@ -85,6 +86,16 @@ namespace mirr
                 :any{}
         {
             initialize<std::decay_t<Type>>(std::forward<Type>(value));
+        }
+
+        any(const any& other, const internal::any_policy policy) noexcept
+        : instance{other.data()},
+        type_info{other.type_info},
+        vtable{other.vtable},
+        policy{policy}
+
+        {
+
         }
 
         /**
@@ -319,7 +330,7 @@ namespace mirr
     	 * @return True if the type is Type, false otherwise.
     	 */
     	template<typename Type>
-    	bool is_type() const noexcept
+    	[[nodiscard]] bool is_type() const noexcept
         {
 	        return type_info.id() == internal::type_hash_v<Type>;
         }
@@ -414,15 +425,15 @@ namespace mirr
          * @return Value casted to the provided type.
          */
         template<typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
-        const Ret cast() const noexcept
+        Ret cast() const noexcept
         {
-        	return *try_cast<Type>();
+        	return *try_cast<Ret>();
         }
 
     	template<typename Type, typename Ret = std::remove_cv_t<std::remove_reference_t<Type>>>
     	Ret cast() noexcept
         {
-        	return *try_cast<Type>();
+        	return *try_cast<Ret>();
         }
 
         /**
@@ -455,7 +466,7 @@ namespace mirr
          * @return Returns true if the object can be cast, false otherwise.
          */
         template<typename Type>
-        bool can_cast() noexcept
+        [[nodiscard]] bool can_cast() noexcept
         {
             return try_cast<std::remove_cv_t<std::remove_reference_t<Type>>>() != nullptr;
         }
@@ -467,7 +478,7 @@ namespace mirr
          * @return Returns true of the object can be converted, false otherwise.
          */
         template<typename Type>
-    	bool can_convert() const noexcept
+    	[[nodiscard]] bool can_convert() const noexcept
         {
             return type_info.is_convertible<Type>();
         }
@@ -478,7 +489,7 @@ namespace mirr
          * @return Returns true if the object can be cast or converted to, false otherwise.
          */
         template<typename Type>
-        bool can_cast_or_convert()
+        [[nodiscard]] bool can_cast_or_convert()
         {
             return can_cast<Type>() || can_convert<Type>();
         }
@@ -639,18 +650,13 @@ namespace mirr
     {
     public:
         template<typename Type, typename = std::enable_if_t<!std::is_same_v<std::decay_t<Type>, any>>>
-        handle(Type &value) // NOLINT(google-explicit-constructor)
+        explicit handle(Type &value)
         {
-            initialize<Type &>(std::forward<Type &>(value));
+            initialize<Type&>(std::forward<Type&>(value));
         }
 
-    	explicit handle(any& value)
+        explicit handle(any& value) : mirr::any(value, internal::any_policy::ref)
         {
-        	type_info = value.type_info;
-        	vtable = value.vtable;
-        	instance = value.data();
-        	storage = value.storage;
-        	policy = internal::any_policy::ref;
         }
     };
 
