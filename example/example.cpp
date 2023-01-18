@@ -57,7 +57,8 @@ public:
                 .data<&test_type::get_value, &test_type::set_value>("value")
                 .data<&test_type::other>("other")
                 .function<static_cast<void (test_type::*)(int)>(&test_type::some_func)>("some_func1")
-                .user_data("something", 4);
+                .user_data("something", 4)
+                .user_data(my_custom_flags::serialize, true);
     }
 };
 

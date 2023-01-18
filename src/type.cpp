@@ -210,10 +210,4 @@ namespace mirr
     		return type_data::instance().types[_id].bases;
     	return {};
     }
-
-    template<typename KeyType, typename>
-    any type::user_data(KeyType &&key) const
-    {
-        return user_data(static_cast<uint32_t>(key));
-    }
 }

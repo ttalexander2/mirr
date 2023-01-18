@@ -231,11 +231,10 @@ namespace mirr
         [[nodiscard]] any user_data(uint32_t hash) const;
 
         template <typename KeyType, typename = std::enable_if_t<std::is_same_v<std::underlying_type_t<KeyType>, uint32_t>>>
-        [[nodiscard]] any user_data(KeyType&& key) const;
+        [[nodiscard]] auto user_data(KeyType&& key) const;
 
 
-    	
-    	[[nodiscard]] bool has_user_data(const std::string& key) const;
+        [[nodiscard]] bool has_user_data(const std::string& key) const;
     	
     	[[nodiscard]] bool has_user_data(uint32_t hash) const;
 
@@ -294,4 +293,5 @@ namespace mirr
         type_id _id;
 
     };
+
 }
