@@ -72,6 +72,12 @@ test_type create_test_type(char f)
     return {"aaah", 0};
 }
 
+enum class test_enum : uint32_t {
+    a,
+    b,
+    c
+};
+
 
 int main()
 {
@@ -92,6 +98,11 @@ int main()
             .conversion<const char *, &std::string::c_str>();
     mirr::register_type<const char *>("cstring")
             .conversion<std::string>();
+
+    mirr::register_type<test_enum>("test_enum")
+            .data<test_enum::a>("a")
+            .data<test_enum::b>("b")
+            .data<test_enum::c>("c");
 
 
     auto type = mirr::resolve("test_type");

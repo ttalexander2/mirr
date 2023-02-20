@@ -308,5 +308,3 @@ namespace mirr
     };
 
 }
-
-#include "type.inl"

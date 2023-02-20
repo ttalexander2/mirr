@@ -4,6 +4,7 @@
 #include "mirr/type_data.h"
 #include "mirr/type_flags.h"
 #include "mirr/type.h"
+#include "mirr/type.inl"
 #include "mirr/data.h"
 #include "mirr/function.h"
 #include "mirr/registry.h"
