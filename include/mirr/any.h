@@ -384,7 +384,8 @@ namespace mirr
             {
                 return static_cast<Type *>(this->data(id));
             }
-            else if (type_info.is_convertible<Type>())
+
+        	if (type_info.is_convertible<Type>())
             {
                 any result = try_conversion(id);
                 reset();
@@ -409,7 +410,7 @@ namespace mirr
         any convert() noexcept
         {
             auto id = internal::type_hash<std::remove_cv_t<std::remove_reference_t<Type>>>::value();
-            if (type_info.is_convertible<Type>())
+        	if (type_info.is_convertible<Type>())
             {
                 return try_conversion(id);
             }

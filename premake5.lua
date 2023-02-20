@@ -1,7 +1,7 @@
 project "mirr"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off"
 
     targetdir("bin/" .. outputdir .. "/%{prj.name}")
@@ -12,10 +12,16 @@ project "mirr"
         "src/**.hpp",
         "src/**.inl",
         "src/**.cpp",
+        "include/**.h",
+        "include/**.hpp",
+        "include/**.inl",
+        "include/**.cpp",
     }
 
-    includedirs {
-        "include"
+    includedirs 
+    {
+        "include",
+        "src"
     }
 
     filter "configurations:Debug"

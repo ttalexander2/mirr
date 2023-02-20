@@ -4,6 +4,12 @@
 #include <functional>
 #include "any.h"
 
+
+namespace Chroma
+{
+	struct Transform;
+}
+
 namespace mirr::internal
 {
 
@@ -167,62 +173,53 @@ namespace mirr::internal
     using type_list_element_t = typename type_list_element<Index, List>::type;
 
 
-    template<typename Type, auto Data, typename DataType>
+    template<typename Type, auto Data>
     [[nodiscard]] bool set_function([[maybe_unused]] mirr::handle handle, [[maybe_unused]] any value)
     {
         if (handle.type().id() != type_hash_v<Type>)
         {
         	return false;
         }
+    	
+    	if constexpr(!std::is_same_v<decltype(Data), Type> && !std::is_same_v<decltype(Data), std::nullptr_t>) {
+    		if constexpr(std::is_member_function_pointer_v<decltype(Data)> || std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>>) {
+    			using descriptor = internal::function_helper_t<Type, decltype(Data)>;
+    			using data_type = type_list_element_t<descriptor::is_static, typename descriptor::args_type>;
 
+    			if(auto *const clazz = handle.try_cast<Type>(); clazz && value.can_cast_or_convert<data_type>()) {
+    				std::invoke(Data, *clazz, value.cast_or_convert<data_type>());
+    				return true;
+    			}
+    		} else if constexpr(std::is_member_object_pointer_v<decltype(Data)>) {
+    			
+    			using data_type = std::remove_reference_t<typename function_helper_t<Type, decltype(Data)>::return_type>;
 
-        if constexpr (!std::is_same_v<decltype(Data), Type> && !std::is_same_v<decltype(Data), std::nullptr_t>)
-        {
-            if constexpr (std::is_member_function_pointer_v<decltype(Data)>
-                          || std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Data)>>>)
-            {
-                using descriptor = function_helper_t<std::decay_t<Type>, decltype(Data)>;
+    			if constexpr(!std::is_array_v<data_type> && !std::is_const_v<data_type>) {
+    				if(auto *const clazz = handle.try_cast<Type>(); clazz != nullptr && value.can_cast_or_convert<data_type>()) {
+    					auto dataValue = value.cast_or_convert<data_type>();
+    					detail::invoke(Data, *clazz) = dataValue;
+    					return true;
+    				}
+    			}
+    		} else {
+    			using data_type = std::remove_reference_t<decltype(*Data)>;
 
-                if (auto *const clazz = handle.try_cast<Type>(); clazz)
-                {
-                    if (auto const *val = value.try_cast_or_convert<DataType>(); val)
-                    {
-                        detail::invoke(Data, *clazz, *val);
-                        return true;
-                    }
-                }
-            }
-        	else if constexpr (std::is_member_object_pointer_v<decltype(Data)>)
-            {
-                using data_type = std::remove_reference_t<typename function_helper_t<Type, decltype(Data)>::return_type>;
-                if constexpr (!std::is_array_v<data_type> && !std::is_const_v<data_type>)
-                {
-                    if (auto *const clazz = handle.try_cast<Type>(); clazz)
-                    {
-                        if (auto const *val = value.try_cast_or_convert<data_type>(); val)
-                        {
-                            detail::invoke(Data, *clazz) = *val;
-                            return true;
-                        }
-                    }
-                }
+    			if constexpr(!std::is_array_v<data_type> && !std::is_const_v<data_type>) {
+    				if(value.can_cast_or_convert<data_type>()) {
+    					*Data = value.cast_or_convert<data_type>();
+    					return true;
+    				}
+    			}
+    		}
+    	}
 
-            }
-            else
-            {
-                using data_type = std::remove_reference_t<decltype(*Data)>;
+    	return false;
+    }
 
-                if constexpr (!std::is_array_v<data_type> && !std::is_const_v<data_type>)
-                {
-                    if (auto *val = value.try_cast<data_type>(); val)
-                    {
-                        *Data = *val;
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+	template<typename Type>
+	any dispatch([[maybe_unused]] Type&& value)
+    {
+	    return any{std::forward<Type>(value)};
     }
 
     template<typename Type, auto Data>
@@ -240,14 +237,14 @@ namespace mirr::internal
                 {
                     if (auto *clazz = handle.try_cast<Type>(); clazz)
                     {
-                        return any(detail::invoke(Data, *clazz));
+                        return dispatch(std::invoke(Data, *clazz));
                     }
                 }
                 if constexpr (std::is_invocable_v<decltype(Data), const Type &>)
                 {
                     if (auto *clazz = handle.try_cast<const Type>(); clazz)
                     {
-                        return any(detail::invoke(Data, *clazz));
+                    	return dispatch(std::invoke(Data, *clazz));
                     }
                 }
             } else if constexpr (std::is_pointer_v<decltype(Data)>)
@@ -257,11 +254,11 @@ namespace mirr::internal
                     return any{};
                 } else
                 {
-                    return any(detail::invoke(*Data));
+                	return dispatch(*Data);
                 }
             } else
             {
-                return any(detail::invoke(Data));
+            	return dispatch(Data);
             }
         }
         return any{};
@@ -275,7 +272,7 @@ namespace mirr::internal
     }
 
     template<typename Types>
-    [[nodiscard]] static uint32_t func_arg(const size_t index) noexcept
+    [[nodiscard]] static uint32_t func_arg(const size_t index) noexcept  // NOLINT(clang-diagnostic-unused-template)
     {
         return unwrap_func_args(Types{}, index);
     }
@@ -290,13 +287,13 @@ namespace mirr::internal
     template<typename Func, typename... Args>
     [[nodiscard]] any invoke_with_args(Func &&func, Args &&...args)
     {
-        if constexpr (std::is_same_v<decltype(detail::invoke(std::forward<Func>(func), args...)), void>)
+        if constexpr (std::is_same_v<decltype(std::invoke(std::forward<Func>(func), args...)), void>)
         {
-            detail::invoke(std::forward<Func>(func), args...);
+            std::invoke(std::forward<Func>(func), args...);
             return any{std::in_place_type<void>};
         } else
         {
-            return any(detail::invoke(std::forward<Func>(func), args...));
+            return any(std::invoke(std::forward<Func>(func), args...));
         }
     }
 
@@ -311,22 +308,22 @@ namespace mirr::internal
         {
             if (const auto *clazz = handle.template try_cast<const Type>(); clazz &&
                                                                             ((args +
-                                                                              Index)->can_cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
+                                                                              Index)->template can_cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
             {
                 return invoke_with_args(std::forward<Func>(func), *clazz,
                                         (args +
-                                         Index)->cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
+                                         Index)->template cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
             }
         } else if constexpr (std::is_invocable_v<std::remove_reference_t<Func>, Type &,
                 type_list_element_t<Index, typename descriptor::args_type>...>)
         {
             if (auto *clazz = handle.template try_cast<Type>(); clazz &&
                                                                 ((args +
-                                                                  Index)->can_cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
+                                                                  Index)->template can_cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>() && ...))
             {
                 return invoke_with_args(std::forward<Func>(func), *clazz,
                                         (args +
-                                         Index)->cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
+                                         Index)->template cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
             }
         } else
         {
@@ -377,9 +374,10 @@ namespace mirr::internal
                 From *clazz = from.try_cast<From>();
                 if (clazz == nullptr)
                     return nullptr;
-                To result = detail::invoke(Func, *clazz);
+                To result = std::invoke(Func, *clazz);
                 return result;
-            } else if constexpr (std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Func)>>>)
+            }
+        	else if constexpr (std::is_function_v<std::remove_reference_t<std::remove_pointer_t<decltype(Func)>>>)
             {
                 using descriptor = internal::function_helper_t<From, decltype(Func)>;
 
@@ -392,10 +390,11 @@ namespace mirr::internal
                 if (clazz == nullptr)
                     return nullptr;
 
-                To result = detail::invoke(Func, *clazz);
+                To result = std::invoke(Func, *clazz);
                 return result;
             }
         }
+        return {};
     }
 
     template<typename From, typename To>
@@ -420,6 +419,7 @@ namespace mirr::internal
         {
             return val->operator To();
         }
+        return {};
     }
 
 
@@ -449,7 +449,7 @@ namespace mirr::internal
         {
             return invoke_with_args(std::forward<Func>(func),
                                     (args +
-                                     Index)->cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
+                                     Index)->template cast_or_convert<type_list_element_t<Index, typename descriptor::args_type>>()...);
         }
         return any{};
     }

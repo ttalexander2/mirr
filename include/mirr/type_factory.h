@@ -193,13 +193,13 @@ namespace mirr
          * @brief Registers a data member for this type.
          * @tparam Data - Pointer to the data object.
          * @param name - User provided identifier for the type.
-         * @param serialize - Whether the data member should be serialized.
+         * @param user_data - Custom data to store with the data.
          * @return Returns a reference to this type factory.
          */
         template<auto Data>
         type_factory &data(const std::string &name, std::vector<std::tuple<uint32_t, any>> user_data = {})
         {
-            uint32_t hash = basic_hash<uint32_t>::hash(name);
+	        const uint32_t hash = basic_hash<uint32_t>::hash(name);
             type_info *info = _type.info();
             if (info != nullptr)
             {
@@ -220,7 +220,7 @@ namespace mirr
                         data.flags |= data_flags::is_const;
                     }
                     data.get = &internal::get_function<Type, Data>;
-                    data.set = &internal::set_function<Type, Data, data_type>;
+                    data.set = &internal::set_function<Type, Data>;
                 }
                 else
                 {
@@ -234,7 +234,7 @@ namespace mirr
                     }
                     data.flags |= data_flags::is_static;
                     data.get = &internal::get_function<Type, Data>;
-                    data.set = &internal::set_function<Type, Data, data_type>;
+                    data.set = &internal::set_function<Type, Data>;
                 }
 
                 for (auto item : user_data)
@@ -260,7 +260,7 @@ namespace mirr
         type_factory &data(const std::string &name, const std::vector<std::tuple<uint32_t, any>>& user_data = {})
         {
             static_assert(!std::is_same_v<decltype(Getter), std::nullptr_t>, "Getter cannot be nullptr!");
-            uint32_t hash = basic_hash<uint32_t>::hash(name);
+            const uint32_t hash = basic_hash<uint32_t>::hash(name);
             type_info *info = _type.info();
             if (info != nullptr)
             {
@@ -272,23 +272,23 @@ namespace mirr
                 // If there is no setter function (i.e data is readonly)
                 if constexpr (std::is_same_v<decltype(Setter), std::nullptr_t>)
                 {
-                    using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Getter), Type &>>;
+                    using data_type = std::invoke_result_t<decltype(Getter), Type &>;
 
                     type_factory<data_type>::register_type();
                     data.type_id = internal::type_hash_v<data_type>;
                     data.get = &internal::get_function<Type, Getter>;
-                    data.set = &internal::set_function<Type, Setter, data_type>;
+                    data.set = &internal::set_function<Type, Setter>;
                     data.flags |= data_flags::is_const;
                 }
                 else
                 {
-                    using data_type = std::remove_reference_t<std::invoke_result_t<decltype(Getter), Type &>>;
+                    using data_type = std::invoke_result_t<decltype(Getter), Type &>;
 
                     type_factory<data_type>::register_type();
                     data.type_id = internal::type_hash_v<data_type>;
                     data.flags |= data_flags::is_static;
                     data.get = &internal::get_function<Type, Getter>;
-                    data.set = &internal::set_function<Type, Setter, data_type>;
+                    data.set = &internal::set_function<Type, Setter>;
                 }
 
                 for (auto item : user_data)
@@ -464,6 +464,10 @@ namespace mirr
 
                 type_data::instance().type_aliases[hash] = id;
                 type_data::instance().types[id] = info;
+            	if constexpr (std::is_arithmetic_v<std::remove_cv_t<std::remove_reference_t<Type>>>)
+            	{
+            		register_numeric_conversions();
+            	}
             }
             else // The type already exists, just add the alias.
             {
@@ -493,7 +497,55 @@ namespace mirr
                 info.underlying_type_id = get_underlying_type();
 
                 type_data::instance().types[id] = info;
+            	
+            	if constexpr (std::is_arithmetic_v<std::remove_cv_t<std::remove_reference_t<Type>>>)
+            	{
+            		register_numeric_conversions();
+            	}
             }
+
+        }
+
+    	static void register_numeric_conversions()
+        {
+        	type_factory<Type> factory;
+        	if constexpr (!std::is_same_v<Type, bool>)
+        	{
+        		factory = factory.conversion<bool>();
+        	}
+        	if constexpr (!std::is_same_v<Type, float>)
+        	{
+        		factory = factory.conversion<float>();
+        	}
+        	if constexpr (!std::is_same_v<Type, double>)
+        	{
+        		factory = factory.conversion<double>();
+        	}
+        	if constexpr (!std::is_same_v<Type, int32_t>)
+        	{
+        		factory = factory.conversion<int32_t>();
+        	}
+        	if constexpr (!std::is_same_v<Type, int64_t>)
+        	{
+        		factory = factory.conversion<int64_t>();
+        	}
+        	if constexpr (!std::is_same_v<Type, uint32_t>)
+        	{
+        		factory = factory.conversion<uint32_t>();
+        	}
+        	if constexpr (!std::is_same_v<Type, uint64_t>)
+        	{
+        		factory = factory.conversion<uint64_t>();
+        	}
+        	if constexpr (!std::is_same_v<Type, char>)
+        	{
+        		factory = factory.conversion<char>();
+        	}
+        	if constexpr (!std::is_same_v<Type, unsigned char>)
+        	{
+        		factory = factory.conversion<unsigned char>();
+        	}
+        	
         }
 
         /**
@@ -505,7 +557,7 @@ namespace mirr
             if constexpr (std::is_pointer_v<Type> || internal::is_pointer_like_v<Type>)
             {
                 auto factory = type_factory<typename internal::remove_all_pointers<Type>::type>();
-                return factory._type._id;
+                return factory._type.id();
             }
 
             return internal::type_hash<void>::value();
@@ -525,8 +577,6 @@ namespace mirr
                 return t.info();
             }
             return nullptr;
-
-
         }
 
         type _type; // Type info for this type.

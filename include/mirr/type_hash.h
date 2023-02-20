@@ -36,7 +36,7 @@ namespace mirr
         {
             [[nodiscard]] static constexpr type_id value() noexcept
             {
-                return type_index<std::remove_cv_t<std::remove_reference_t<T>>>::value();
+                return type_index<std::decay_t<T>>::value();
             }
         };
 

@@ -78,16 +78,16 @@ namespace mirr
         [[nodiscard]] std::string name() const;
 
         /**
-         * @brief The underlying type containing this data.
-         * @return
+         * @brief The type of the data.
+         * @return A type object containing the type of this data.
          */
         [[nodiscard]] mirr::type type() const;
 
         /**
-         * @brief The type of the data.
-         * @return A type object containing the type of this data.
+         * @brief The owning type of this data.
+
          */
-         [[nodiscard]] mirr::type data_type() const;
+         [[nodiscard]] mirr::type owner() const;
 
         /**
          * @brief Flag representing whether this data is const.
@@ -114,7 +114,7 @@ namespace mirr
          * @param value - Value to set the data to.
          * @return Returns true if the set operation was successful, false otherwise.
          */
-        bool set(mirr::handle handle, const any &value) const;
+        bool set(mirr::handle handle, any value) const;
 
     	/**
 		 * @brief Gets a piece of user data associated with this type, from the given key.
@@ -155,10 +155,10 @@ namespace mirr
          * @param id
          * @param type_id
          */
-        explicit data(uint32_t id, uint32_t type_id);
+        explicit data(uint32_t id, uint32_t owner);
 
         uint32_t _id; // ID of the data.
-        uint32_t _type_id; // ID of the type containing the data.
+    	uint32_t _owner; // ID of the type containing this data
     };
 
 

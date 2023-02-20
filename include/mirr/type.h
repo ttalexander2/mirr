@@ -101,6 +101,19 @@ namespace mirr
          */
         [[nodiscard]] bool is_integral() const;
 
+    	/**
+ 		* @brief Checks whether the type is a number.
+ 		* @return Returns true if the type is numeric, false otherwise.
+ 		*/
+    	[[nodiscard]] bool is_floating_point() const;
+
+
+    	/**
+		 * @brief Checks whether the type is a number.
+		 * @return Returns true if the type is numeric, false otherwise.
+		 */
+    	[[nodiscard]] bool is_arithmetic() const;
+
         /**
          * @brief Checks whether the type is an array.
          * @return Returns true if the type is an array, false otherwise.
@@ -295,3 +308,5 @@ namespace mirr
     };
 
 }
+
+#include "type.inl"

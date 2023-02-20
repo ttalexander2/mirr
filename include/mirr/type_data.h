@@ -162,43 +162,47 @@ namespace mirr
         {
             type_flags flags = type_flags::none;
 
-            if (std::is_class_v<T>)
+            if constexpr (std::is_class_v<T>)
             {
                 flags |= type_flags::is_class;
             }
-            if (std::is_abstract_v<T>)
+            if constexpr (std::is_abstract_v<T>)
             {
                 flags |= type_flags::is_abstract;
             }
-            if (std::is_integral_v<T>)
+            if constexpr (std::is_integral_v<T>)
             {
                 flags |= type_flags::is_integral;
             }
-            if (std::is_array_v<T>)
+        	if constexpr (std::is_floating_point_v<T>)
+        	{
+        		flags |= type_flags::is_floating_point;
+        	}
+            if constexpr (std::is_array_v<T>)
             {
                 flags |= type_flags::is_array;
             }
-            if (std::is_enum_v<T>)
+            if constexpr (std::is_enum_v<T>)
             {
                 flags |= type_flags::is_enum;
             }
-            if (std::is_pointer_v<T>)
+            if constexpr (std::is_pointer_v<T>)
             {
                 flags |= type_flags::is_pointer;
             }
-            if (internal::is_pointer_like_v<T>)
+            if constexpr (internal::is_pointer_like_v<T>)
             {
                 flags |= type_flags::is_pointer_like;
             }
-            if (internal::is_sequence_container_v<T>)
+            if constexpr (internal::is_sequence_container_v<T>)
             {
                 flags |= type_flags::is_sequence_container;
             }
-            if (internal::is_associative_container_v<T>)
+            if constexpr (internal::is_associative_container_v<T>)
             {
                 flags |= type_flags::is_associative_container;
             }
-            if (false)
+            if constexpr (false)
             {
                 flags |= type_flags::is_template_specialization;
             }

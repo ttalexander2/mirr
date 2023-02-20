@@ -39,6 +39,18 @@ namespace mirr
         return false;
     }
 
+	bool type::is_floating_point() const
+    {
+    	if (valid())
+    		return internal::has_flag(type_data::instance().types[_id].flags, type_flags::is_floating_point);
+    	return false;
+    }
+
+	bool type::is_arithmetic() const
+    {
+    	return is_integral() || is_floating_point();
+    }
+
     bool type::is_array() const
     {
         if (valid())

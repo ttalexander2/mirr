@@ -192,7 +192,7 @@ namespace mirr::internal
         static std::false_type check(...);
 
     public:
-        static constexpr bool value = std::is_convertible_v<From, To> || decltype(check<From>(nullptr))::value;
+        static constexpr bool value = std::is_convertible_v<From, To> || decltype(check<From>(nullptr))::value || (std::is_arithmetic_v<From> && std::is_arithmetic_v<To>);
     };
 
     template<typename T, typename U>

@@ -11,13 +11,14 @@ namespace mirr
         is_class = 1 << 0,
         is_abstract = 1 << 1,
         is_integral = 1 << 2,
-        is_array = 1 << 3,
-        is_enum = 1 << 4,
-        is_pointer = 1 << 5,
-        is_pointer_like = 1 << 6,
-        is_sequence_container = 1 << 7,
-        is_associative_container = 1 << 8,
-        is_template_specialization = 1 << 9
+    	is_floating_point = 1 << 3,
+        is_array = 1 << 4,
+        is_enum = 1 << 5,
+        is_pointer = 1 << 6,
+        is_pointer_like = 1 << 7,
+        is_sequence_container = 1 << 8,
+        is_associative_container = 1 << 9,
+        is_template_specialization = 1 << 10
     };
 
     /**
