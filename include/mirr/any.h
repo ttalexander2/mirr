@@ -658,6 +658,7 @@ namespace mirr
 
         explicit handle(any& value) : mirr::any(value, internal::any_policy::ref)
         {
+        	type_info = value.type_info;
         }
     };
 
