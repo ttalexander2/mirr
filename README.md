@@ -32,7 +32,7 @@ int main()
             .function<&vector::magnitude>("magnitude"); // Register the magnitude function
             
     // Use the reflection system
-    mirr::type type = mirr::resolve<vector>("vector");
+    mirr::type type = mirr::resolve("vector");
     
     vector my_vector{};
     
