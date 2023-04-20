@@ -63,7 +63,7 @@ namespace mirr
         return type_data::instance().types[_owner].data[_id].get(std::move(handle));
     }
 
-    bool data::set(mirr::handle& handle, any value) const
+    bool data::set(mirr::handle handle, any value) const
     {
         if (!valid())
             return false;

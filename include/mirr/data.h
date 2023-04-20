@@ -114,7 +114,7 @@ namespace mirr
          * @param value - Value to set the data to.
          * @return Returns true if the set operation was successful, false otherwise.
          */
-        bool set(mirr::handle& handle, any value) const;
+        [[nodiscard]] bool set(mirr::handle handle, any value) const;
 
     	/**
 		 * @brief Gets a piece of user data associated with this type, from the given key.
