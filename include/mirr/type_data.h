@@ -40,7 +40,7 @@ namespace mirr
         id_type id;
         id_type type_id;
 
-        bool (*set)(handle, any);
+        bool (*set)(handle&, any);
 
         any (*get)(handle);
 
